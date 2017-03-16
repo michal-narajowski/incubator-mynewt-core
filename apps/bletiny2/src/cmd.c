@@ -247,6 +247,114 @@ static const struct shell_cmd_help disconnect_help = {
     .params = disconnect_params,
 };
 
+/*****************************************************************************
+ * $scan                                                                     *
+ *****************************************************************************/
+
+static struct kv_pair cmd_scan_filt_policies[] = {
+    { "no_wl", BLE_HCI_SCAN_FILT_NO_WL },
+    { "use_wl", BLE_HCI_SCAN_FILT_USE_WL },
+    { "no_wl_inita", BLE_HCI_SCAN_FILT_NO_WL_INITA },
+    { "use_wl_inita", BLE_HCI_SCAN_FILT_USE_WL_INITA },
+    { NULL }
+};
+
+static int
+cmd_scan(int argc, char **argv)
+{
+    struct ble_gap_disc_params params;
+    int32_t duration_ms;
+    uint8_t own_addr_type;
+    int rc;
+
+    if (argc > 1 && strcmp(argv[1], "cancel") == 0) {
+        rc = bletiny_scan_cancel();
+        if (rc != 0) {
+            console_printf("connection cancel fail: %d\n", rc);
+            return rc;
+        }
+        return 0;
+    }
+
+    duration_ms = parse_arg_long_bounds_default("dur", 1, INT32_MAX,
+                                                BLE_HS_FOREVER, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'dur' parameter\n");
+        return rc;
+    }
+
+    params.limited = parse_arg_bool_default("ltd", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'ltd' parameter\n");
+        return rc;
+    }
+
+    params.passive = parse_arg_bool_default("passive", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'passive' parameter\n");
+        return rc;
+    }
+
+    params.itvl = parse_arg_uint16_dflt("itvl", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'itvl' parameter\n");
+        return rc;
+    }
+
+    params.window = parse_arg_uint16_dflt("window", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'window' parameter\n");
+        return rc;
+    }
+
+    params.filter_policy = parse_arg_kv_default(
+        "filt", cmd_scan_filt_policies, BLE_HCI_SCAN_FILT_NO_WL, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'filt' parameter\n");
+        return rc;
+    }
+
+    params.filter_duplicates = parse_arg_bool_default("nodups", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'nodups' parameter\n");
+        return rc;
+    }
+
+    own_addr_type = parse_arg_kv_default("own_addr_type", cmd_own_addr_types,
+                                         BLE_OWN_ADDR_PUBLIC, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'own_addr_type' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_scan(own_addr_type, duration_ms, &params);
+    if (rc != 0) {
+        console_printf("error scanning; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param scan_params[] = {
+    {"cancel", ""},
+    {"dur", ""},
+    {"ltd", ""},
+    {"passive", ""},
+    {"itvl", ""},
+    {"window", ""},
+    {"filt", ""},
+    {"nodups", ""},
+    {"own_addr_type", ""},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help scan_help = {
+    .summary = "scan",
+    .usage = "scan usage",
+    .params = scan_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "connect",
@@ -257,6 +365,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "disconnect",
         .cb = cmd_disconnect,
         .help = &disconnect_help,
+    },
+    {
+        .cmd_name = "scan",
+        .cb = cmd_scan,
+        .help = &scan_help,
     },
     { NULL, NULL, NULL },
 };
