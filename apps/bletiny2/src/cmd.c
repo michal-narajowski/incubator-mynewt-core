@@ -95,6 +95,11 @@ cmd_advertise(int argc, char **argv)
     uint8_t own_addr_type;
     int rc;
 
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
     if (argc > 1 && strcmp(argv[1], "stop") == 0) {
         rc = bletiny_adv_stop();
         if (rc != 0) {
@@ -227,6 +232,11 @@ cmd_connect(int argc, char **argv)
     ble_addr_t *peer_addr_param = &peer_addr;
     int own_addr_type;
     int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
 
     if (argc > 1 && strcmp(argv[1], "cancel") == 0) {
         rc = bletiny_conn_cancel();
@@ -367,8 +377,9 @@ cmd_disconnect(int argc, char **argv)
     uint8_t reason;
     int rc;
 
-    if (argc > 1 && strcmp(argv[1], "help") == 0) {
-        return 0;
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
     }
 
     conn_handle = parse_arg_uint16("conn", &rc);
@@ -423,6 +434,11 @@ cmd_scan(int argc, char **argv)
     int32_t duration_ms;
     uint8_t own_addr_type;
     int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
 
     if (argc > 1 && strcmp(argv[1], "cancel") == 0) {
         rc = bletiny_scan_cancel();
@@ -573,6 +589,11 @@ cmd_set(int argc, char **argv)
     uint8_t irk[16];
     int good = 0;
     int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
 
     rc = parse_arg_find_idx("addr");
     if (rc != -1) {
