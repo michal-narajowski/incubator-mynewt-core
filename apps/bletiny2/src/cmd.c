@@ -17,6 +17,7 @@
  * under the License.
  */
 
+#include <assert.h>
 #include <inttypes.h>
 #include <errno.h>
 #include <string.h>
@@ -31,6 +32,7 @@
 #include "host/ble_eddystone.h"
 #include "host/ble_hs_id.h"
 #include "services/gatt/ble_svc_gatt.h"
+#include "../src/ble_hs_priv.h"
 
 #include "console/console.h"
 #include "shell/shell.h"
@@ -510,6 +512,120 @@ static const struct shell_cmd_help scan_help = {
     .params = scan_params,
 };
 
+/*****************************************************************************
+ * $set                                                                      *
+ *****************************************************************************/
+
+static struct kv_pair cmd_set_addr_types[] = {
+    { "public",         BLE_ADDR_PUBLIC },
+    { "random",         BLE_ADDR_RANDOM },
+    { NULL }
+};
+
+static int
+cmd_set_addr(void)
+{
+    uint8_t addr[6];
+    int addr_type;
+    int rc;
+
+    addr_type = parse_arg_kv_default("addr_type", cmd_set_addr_types,
+                                     BLE_ADDR_PUBLIC, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'addr_type' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_mac("addr", addr);
+    if (rc != 0) {
+        console_printf("invalid 'addr' parameter\n");
+        return rc;
+    }
+
+    switch (addr_type) {
+    case BLE_ADDR_PUBLIC:
+        /* We shouldn't be writing to the controller's address (g_dev_addr).
+         * There is no standard way to set the local public address, so this is
+         * our only option at the moment.
+         */
+        memcpy(g_dev_addr, addr, 6);
+        ble_hs_id_set_pub(g_dev_addr);
+        break;
+
+    case BLE_ADDR_RANDOM:
+        rc = ble_hs_id_set_rnd(addr);
+        if (rc != 0) {
+            return rc;
+        }
+        break;
+
+    default:
+        return BLE_HS_EUNKNOWN;
+    }
+
+    return 0;
+}
+
+static int
+cmd_set(int argc, char **argv)
+{
+    uint16_t mtu;
+    uint8_t irk[16];
+    int good = 0;
+    int rc;
+
+    rc = parse_arg_find_idx("addr");
+    if (rc != -1) {
+        rc = cmd_set_addr();
+        if (rc != 0) {
+            return rc;
+        }
+        good = 1;
+    }
+
+    mtu = parse_arg_uint16("mtu", &rc);
+    if (rc == 0) {
+        rc = ble_att_set_preferred_mtu(mtu);
+        if (rc == 0) {
+            good = 1;
+        }
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'mtu' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream_exact_length("irk", irk, 16);
+    if (rc == 0) {
+        good = 1;
+        ble_hs_pvcy_set_our_irk(irk);
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'irk' parameter\n");
+        return rc;
+    }
+
+    if (!good) {
+        console_printf("Error: no valid settings specified\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static const struct shell_param set_params[] = {
+    {"cancel", ""},
+    {"addr", ""},
+    {"addr_type", ""},
+    {"mtu", ""},
+    {"irk", ""},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help set_help = {
+    .summary = "set",
+    .usage = "set usage",
+    .params = set_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -530,6 +646,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "scan",
         .cb = cmd_scan,
         .help = &scan_help,
+    },
+    {
+        .cmd_name = "set",
+        .cb = cmd_set,
+        .help = &set_help,
     },
     { NULL, NULL, NULL },
 };
