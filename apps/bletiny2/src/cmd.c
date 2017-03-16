@@ -58,6 +58,161 @@ static struct kv_pair cmd_peer_addr_types[] = {
 };
 
 /*****************************************************************************
+ * $advertise                                                                *
+ *****************************************************************************/
+
+static struct kv_pair cmd_adv_conn_modes[] = {
+    { "non", BLE_GAP_CONN_MODE_NON },
+    { "und", BLE_GAP_CONN_MODE_UND },
+    { "dir", BLE_GAP_CONN_MODE_DIR },
+    { NULL }
+};
+
+static struct kv_pair cmd_adv_disc_modes[] = {
+    { "non", BLE_GAP_DISC_MODE_NON },
+    { "ltd", BLE_GAP_DISC_MODE_LTD },
+    { "gen", BLE_GAP_DISC_MODE_GEN },
+    { NULL }
+};
+
+static struct kv_pair cmd_adv_filt_types[] = {
+    { "none", BLE_HCI_ADV_FILT_NONE },
+    { "scan", BLE_HCI_ADV_FILT_SCAN },
+    { "conn", BLE_HCI_ADV_FILT_CONN },
+    { "both", BLE_HCI_ADV_FILT_BOTH },
+    { NULL }
+};
+
+static int
+cmd_advertise(int argc, char **argv)
+{
+    struct ble_gap_adv_params params;
+    int32_t duration_ms;
+    ble_addr_t peer_addr;
+    ble_addr_t *peer_addr_param = &peer_addr;
+    uint8_t own_addr_type;
+    int rc;
+
+    if (argc > 1 && strcmp(argv[1], "stop") == 0) {
+        rc = bletiny_adv_stop();
+        if (rc != 0) {
+            console_printf("advertise stop fail: %d\n", rc);
+            return rc;
+        }
+
+        return 0;
+    }
+
+    params.conn_mode = parse_arg_kv_default("conn", cmd_adv_conn_modes,
+                                            BLE_GAP_CONN_MODE_UND, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    params.disc_mode = parse_arg_kv_default("disc", cmd_adv_disc_modes,
+                                            BLE_GAP_DISC_MODE_GEN, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'disc' parameter\n");
+        return rc;
+    }
+
+    peer_addr.type = parse_arg_kv_default(
+        "peer_addr_type", cmd_peer_addr_types, BLE_ADDR_PUBLIC, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'peer_addr_type' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_mac("peer_addr", peer_addr.val);
+    if (rc == ENOENT) {
+        peer_addr_param = NULL;
+    } else if (rc != 0) {
+        console_printf("invalid 'peer_addr' parameter\n");
+        return rc;
+    }
+
+    own_addr_type = parse_arg_kv_default(
+        "own_addr_type", cmd_own_addr_types, BLE_OWN_ADDR_PUBLIC, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'own_addr_type' parameter\n");
+        return rc;
+    }
+
+    params.channel_map = parse_arg_long_bounds_default("chan_map", 0, 0xff, 0,
+                                                       &rc);
+    if (rc != 0) {
+        console_printf("invalid 'chan_map' parameter\n");
+        return rc;
+    }
+
+    params.filter_policy = parse_arg_kv_default("filt", cmd_adv_filt_types,
+                                                BLE_HCI_ADV_FILT_NONE, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'filt' parameter\n");
+        return rc;
+    }
+
+    params.itvl_min = parse_arg_long_bounds_default("itvl_min", 0, UINT16_MAX,
+                                                    0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'itvl_min' parameter\n");
+        return rc;
+    }
+
+    params.itvl_max = parse_arg_long_bounds_default("itvl_max", 0, UINT16_MAX,
+                                                    0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'itvl_max' parameter\n");
+        return rc;
+    }
+
+    params.high_duty_cycle = parse_arg_long_bounds_default("hd", 0, 1, 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'hd' parameter\n");
+        return rc;
+    }
+
+    duration_ms = parse_arg_long_bounds_default("dur", 1, INT32_MAX,
+                                                BLE_HS_FOREVER, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'dur' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_adv_start(own_addr_type, peer_addr_param, duration_ms,
+                           &params);
+    if (rc != 0) {
+        console_printf("advertise fail: %d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param advertise_params[] = {
+    {"stop", ""},
+    {"conn", ""},
+    {"disc", ""},
+    {"peer_addr_type", ""},
+    {"peer_addr", ""},
+    {"own_addr_type", ""},
+    {"chan_map", ""},
+    {"filt", ""},
+    {"itvl_min", ""},
+    {"itvl_max", ""},
+    {"hd", ""},
+    {"dur", ""},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help advertise_help = {
+    .summary = "advertise",
+    .usage = "advertise usage",
+    .params = advertise_params,
+};
+
+/*****************************************************************************
  * $connect                                                                  *
  *****************************************************************************/
 
@@ -356,6 +511,11 @@ static const struct shell_cmd_help scan_help = {
 };
 
 static const struct shell_cmd btshell_commands[] = {
+    {
+        .cmd_name = "advertise",
+        .cb = cmd_advertise,
+        .help = &advertise_help,
+    },
     {
         .cmd_name = "connect",
         .cb = cmd_connect,
