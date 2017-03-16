@@ -109,9 +109,9 @@ cmd_connect(int argc, char **argv)
         return rc;
     }
 
-    params.scan_itvl = parse_arg_uint16_dflt("scan_itvl", 0x0010, &rc);
+    params.scan_itvl = parse_arg_uint16_dflt("scan_interval", 0x0010, &rc);
     if (rc != 0) {
-        console_printf("invalid 'scan_itvl' parameter\n");
+        console_printf("invalid 'scan_interval' parameter\n");
         return rc;
     }
 
@@ -122,16 +122,16 @@ cmd_connect(int argc, char **argv)
     }
 
     params.itvl_min = parse_arg_uint16_dflt(
-        "itvl_min", BLE_GAP_INITIAL_CONN_ITVL_MIN, &rc);
+        "interval_min", BLE_GAP_INITIAL_CONN_ITVL_MIN, &rc);
     if (rc != 0) {
-        console_printf("invalid 'itvl_min' parameter\n");
+        console_printf("invalid 'interval_min' parameter\n");
         return rc;
     }
 
     params.itvl_max = parse_arg_uint16_dflt(
-        "itvl_max", BLE_GAP_INITIAL_CONN_ITVL_MAX, &rc);
+        "interval_max", BLE_GAP_INITIAL_CONN_ITVL_MAX, &rc);
     if (rc != 0) {
-        console_printf("invalid 'itvl_max' parameter\n");
+        console_printf("invalid 'interval_max' parameter\n");
         return rc;
     }
 
@@ -147,28 +147,28 @@ cmd_connect(int argc, char **argv)
         return rc;
     }
 
-    params.min_ce_len = parse_arg_uint16_dflt("min_ce_len", 0x0010, &rc);
+    params.min_ce_len = parse_arg_uint16_dflt("min_conn_event_len", 0x0010, &rc);
     if (rc != 0) {
-        console_printf("invalid 'min_ce_len' parameter\n");
+        console_printf("invalid 'min_conn_event_len' parameter\n");
         return rc;
     }
 
-    params.max_ce_len = parse_arg_uint16_dflt("max_ce_len", 0x0300, &rc);
+    params.max_ce_len = parse_arg_uint16_dflt("max_conn_event_len", 0x0300, &rc);
     if (rc != 0) {
-        console_printf("invalid 'max_ce_len' parameter\n");
+        console_printf("invalid 'max_conn_event_len' parameter\n");
         return rc;
     }
 
-    duration_ms = parse_arg_long_bounds_default("dur", 1, INT32_MAX, 0, &rc);
+    duration_ms = parse_arg_long_bounds_default("duration", 1, INT32_MAX, 0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'dur' parameter\n");
+        console_printf("invalid 'duration' parameter\n");
         return rc;
     }
 
     rc = bletiny_conn_initiate(own_addr_type, peer_addr_param, duration_ms,
                                &params);
     if (rc != 0) {
-        console_printf("error while executing connect command\n");
+        console_printf("error connecting; rc=%d\n", rc);
         return rc;
     }
 
