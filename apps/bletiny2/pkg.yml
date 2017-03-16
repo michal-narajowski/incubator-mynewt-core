@@ -34,4 +34,4 @@ pkg.deps:
     - sys/log/full
     - sys/stats/full
     - sys/console/full
-    - sys/newshell
+    - sys/shell

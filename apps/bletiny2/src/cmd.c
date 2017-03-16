@@ -33,7 +33,7 @@
 #include "services/gatt/ble_svc_gatt.h"
 
 #include "console/console.h"
-#include "newshell/shell/shell.h"
+#include "shell/shell.h"
 
 #include "cmd.h"
 #include "bletiny.h"
