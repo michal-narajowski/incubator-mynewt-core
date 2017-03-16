@@ -344,18 +344,18 @@ cmd_connect(int argc, char **argv)
 
 static const struct shell_param connect_params[] = {
     {"cancel", "cancel connection procedure"},
-    {"peer_addr_type", ""},
-    {"peer_addr", ""},
-    {"own_addr_type", ""},
-    {"scan_interval", ""},
-    {"scan_window", ""},
-    {"interval_min", ""},
-    {"interval_max", ""},
-    {"latency", ""},
-    {"timeout", ""},
-    {"min_conn_event_len", ""},
-    {"max_conn_event_len", ""},
-    {"duration", ""},
+    {"peer_addr_type", "usage: =[public|random|public_id|random_id], default: public"},
+    {"peer_addr", "usage: =[XX:XX:XX:XX:XX:XX]"},
+    {"own_addr_type", "usage: =[public|random|rpa_pub|rpa_rnd], default: public"},
+    {"scan_interval", "usage: =[0-UINT16_MAX], default: 0x0010"},
+    {"scan_window", "usage: =[0-UINT16_MAX], default: 0x0010"},
+    {"interval_min", "usage: =[0-UINT16_MAX], default: 30"},
+    {"interval_max", "usage: =[0-UINT16_MAX], ,default: 50"},
+    {"latency", "usage: =[UINT16], default: 0"},
+    {"timeout", "usage: =[UINT16], default: 0x0100"},
+    {"min_conn_event_len", "usage: =[UINT16], default: 0x0010"},
+    {"max_conn_event_len", "usage: =[UINT16], default: 0x0300"},
+    {"duration", "usage: =[1-INT32_MAX], default: 0"},
     {NULL, NULL}
 };
 
