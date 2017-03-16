@@ -198,11 +198,65 @@ static const struct shell_cmd_help connect_help = {
     .params = connect_params,
 };
 
+
+/*****************************************************************************
+ * $disconnect                                                               *
+ *****************************************************************************/
+
+static int
+cmd_disconnect(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    uint8_t reason;
+    int rc;
+
+    if (argc > 1 && strcmp(argv[1], "help") == 0) {
+        return 0;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    reason = parse_arg_uint8_dflt("reason", BLE_ERR_REM_USER_CONN_TERM, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'reason' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_term_conn(conn_handle, reason);
+    if (rc != 0) {
+        console_printf("error terminating connection; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param disconnect_params[] = {
+    {"conn", ""},
+    {"reason", ""},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help disconnect_help = {
+    .summary = "disconnect",
+    .usage = "disconnect usage",
+    .params = disconnect_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "connect",
         .cb = cmd_connect,
         .help = &connect_help,
+    },
+    {
+        .cmd_name = "disconnect",
+        .cb = cmd_disconnect,
+        .help = &disconnect_help,
     },
     { NULL, NULL, NULL },
 };
