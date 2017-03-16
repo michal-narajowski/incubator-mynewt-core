@@ -29,7 +29,7 @@
 #include "os/os.h"
 #include "bsp/bsp.h"
 #include "hal/hal_gpio.h"
-#include "newshell/console/console.h"
+#include "console/console.h"
 #include "bletiny.h"
 #include "cmd.h"
 

@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 #include "bsp/bsp.h"
-#include "newshell/console/console.h"
+#include "console/console.h"
 #include "host/ble_hs.h"
 #include "host/ble_uuid.h"
 #include "bletiny.h"

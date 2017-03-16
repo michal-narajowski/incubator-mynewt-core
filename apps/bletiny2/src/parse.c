@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <assert.h>
-#include "newshell/console/console.h"
+#include "console/console.h"
 #include "host/ble_uuid.h"
 #include "cmd.h"
 #include "bletiny.h"

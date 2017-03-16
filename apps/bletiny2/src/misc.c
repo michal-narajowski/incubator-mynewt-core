@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "newshell/console/console.h"
+#include "console/console.h"
 #include "host/ble_uuid.h"
 #include "host/ble_gap.h"
 

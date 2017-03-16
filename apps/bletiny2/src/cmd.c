@@ -32,7 +32,7 @@
 #include "host/ble_hs_id.h"
 #include "services/gatt/ble_svc_gatt.h"
 
-#include "newshell/console/console.h"
+#include "console/console.h"
 #include "newshell/shell/shell.h"
 
 #include "cmd.h"
@@ -168,6 +168,7 @@ cmd_connect(int argc, char **argv)
     rc = bletiny_conn_initiate(own_addr_type, peer_addr_param, duration_ms,
                                &params);
     if (rc != 0) {
+        console_printf("error while executing connect command\n");
         return rc;
     }
 
