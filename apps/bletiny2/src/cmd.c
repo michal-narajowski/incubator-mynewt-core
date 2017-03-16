@@ -117,10 +117,10 @@ cmd_advertise(int argc, char **argv)
         return rc;
     }
 
-    params.disc_mode = parse_arg_kv_default("disc", cmd_adv_disc_modes,
+    params.disc_mode = parse_arg_kv_default("discov", cmd_adv_disc_modes,
                                             BLE_GAP_DISC_MODE_GEN, &rc);
     if (rc != 0) {
-        console_printf("invalid 'disc' parameter\n");
+        console_printf("invalid 'discov' parameter\n");
         return rc;
     }
 
@@ -146,44 +146,44 @@ cmd_advertise(int argc, char **argv)
         return rc;
     }
 
-    params.channel_map = parse_arg_long_bounds_default("chan_map", 0, 0xff, 0,
+    params.channel_map = parse_arg_long_bounds_default("channel_map", 0, 0xff, 0,
                                                        &rc);
     if (rc != 0) {
-        console_printf("invalid 'chan_map' parameter\n");
+        console_printf("invalid 'channel_map' parameter\n");
         return rc;
     }
 
-    params.filter_policy = parse_arg_kv_default("filt", cmd_adv_filt_types,
+    params.filter_policy = parse_arg_kv_default("filter", cmd_adv_filt_types,
                                                 BLE_HCI_ADV_FILT_NONE, &rc);
     if (rc != 0) {
-        console_printf("invalid 'filt' parameter\n");
+        console_printf("invalid 'filter' parameter\n");
         return rc;
     }
 
-    params.itvl_min = parse_arg_long_bounds_default("itvl_min", 0, UINT16_MAX,
+    params.itvl_min = parse_arg_long_bounds_default("interval_min", 0, UINT16_MAX,
                                                     0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'itvl_min' parameter\n");
+        console_printf("invalid 'interval_min' parameter\n");
         return rc;
     }
 
-    params.itvl_max = parse_arg_long_bounds_default("itvl_max", 0, UINT16_MAX,
+    params.itvl_max = parse_arg_long_bounds_default("interval_max", 0, UINT16_MAX,
                                                     0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'itvl_max' parameter\n");
+        console_printf("invalid 'interval_max' parameter\n");
         return rc;
     }
 
-    params.high_duty_cycle = parse_arg_long_bounds_default("hd", 0, 1, 0, &rc);
+    params.high_duty_cycle = parse_arg_long_bounds_default("high_duty", 0, 1, 0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'hd' parameter\n");
+        console_printf("invalid 'high_duty' parameter\n");
         return rc;
     }
 
-    duration_ms = parse_arg_long_bounds_default("dur", 1, INT32_MAX,
+    duration_ms = parse_arg_long_bounds_default("duration", 1, INT32_MAX,
                                                 BLE_HS_FOREVER, &rc);
     if (rc != 0) {
-        console_printf("invalid 'dur' parameter\n");
+        console_printf("invalid 'duration' parameter\n");
         return rc;
     }
 
@@ -198,18 +198,18 @@ cmd_advertise(int argc, char **argv)
 }
 
 static const struct shell_param advertise_params[] = {
-    {"stop", ""},
-    {"conn", ""},
-    {"disc", ""},
-    {"peer_addr_type", ""},
-    {"peer_addr", ""},
-    {"own_addr_type", ""},
-    {"chan_map", ""},
-    {"filt", ""},
-    {"itvl_min", ""},
-    {"itvl_max", ""},
-    {"hd", ""},
-    {"dur", ""},
+    {"stop", "stop advertising procedure"},
+    {"conn", "connectable mode, usage: =[non|und|dir], default: und"},
+    {"discov", "discoverable mode, usage: =[non|ltd|gen], default: gen"},
+    {"peer_addr_type", "usage: =[public|random|public_id|random_id], default: public"},
+    {"peer_addr", "usage: =[XX:XX:XX:XX:XX:XX]"},
+    {"own_addr_type", "usage: =[public|random|rpa_pub|rpa_rnd], default: public"},
+    {"channel_map", "usage: =[0x00-0xff], default: 0"},
+    {"filter", "usage: =[none|scan|conn|both], default: none"},
+    {"interval_min", "usage: =[0-UINT16_MAX], default: 0"},
+    {"interval_max", "usage: =[0-UINT16_MAX], default: 0"},
+    {"high_duty", "usage: =[0-1], default: 0"},
+    {"duration", "usage: =[1-INT32_MAX], default: INT32_MAX"},
     {NULL, NULL}
 };
 
