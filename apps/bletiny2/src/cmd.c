@@ -40,6 +40,7 @@
 #include "cmd.h"
 #include "bletiny.h"
 #include "cmd_gatt.h"
+#include "cmd_l2cap.h"
 
 #define BTSHELL_MODULE "btshell"
 
@@ -799,6 +800,73 @@ static const struct shell_cmd_help gatt_write_help = {
     .params = gatt_write_params,
 };
 
+/*****************************************************************************
+ * $l2cap-update                                                             *
+ *****************************************************************************/
+
+static const struct shell_param l2cap_update_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"interval_min", "usage: =[0-UINT16_MAX], default: 30"},
+    {"interval_max", "usage: =[0-UINT16_MAX], default: 50"},
+    {"latency", "usage: =[UINT16], default: 0"},
+    {"timeout", "usage: =[UINT16], default: 0x0100"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help l2cap_update_help = {
+    .summary = "l2cap_update",
+    .usage = "l2cap_update usage",
+    .params = l2cap_update_params,
+};
+
+/*****************************************************************************
+ * $l2cap-create-server                                                      *
+ *****************************************************************************/
+
+static const struct shell_param l2cap_create_server_params[] = {
+    {"psm", "usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help l2cap_create_server_help = {
+    .summary = "l2cap_create_server",
+    .usage = "l2cap_create_server usage",
+    .params = l2cap_create_server_params,
+};
+
+/*****************************************************************************
+ * $l2cap-connect                                                            *
+ *****************************************************************************/
+
+static const struct shell_param l2cap_connect_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"psm", "usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help l2cap_connect_help = {
+    .summary = "l2cap_connect",
+    .usage = "l2cap_connect usage",
+    .params = l2cap_connect_params,
+};
+
+/*****************************************************************************
+ * $l2cap-disconnect                                                         *
+ *****************************************************************************/
+
+static const struct shell_param l2cap_disconnect_params[] = {
+    {"conn", "disconnection handle, usage: =<UINT16>"},
+    {"idx", "usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help l2cap_disconnect_help = {
+    .summary = "l2cap_disconnect",
+    .usage = "l2cap_disconnect usage, use show-coc to get the parameters",
+    .params = l2cap_disconnect_params,
+};
+
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -864,6 +932,26 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-write",
         .cb = cmd_gatt_write,
         .help = &gatt_write_help,
+    },
+    {
+        .cmd_name = "l2cap-update",
+        .cb = cmd_l2cap_update,
+        .help = &l2cap_update_help,
+    },
+    {
+        .cmd_name = "l2cap-create-server",
+        .cb = cmd_l2cap_create_server,
+        .help = &l2cap_create_server_help,
+    },
+    {
+        .cmd_name = "l2cap-connect",
+        .cb = cmd_l2cap_connect,
+        .help = &l2cap_connect_help,
+    },
+    {
+        .cmd_name = "l2cap-disconnect",
+        .cb = cmd_l2cap_disconnect,
+        .help = &l2cap_disconnect_help,
     },
     { NULL, NULL, NULL },
 };
