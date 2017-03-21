@@ -157,3 +157,33 @@ cmd_gatt_discover_full(int argc, char **argv)
 
     return 0;
 }
+
+/*****************************************************************************
+ * $gatt-exchange-mtu                                                        *
+ *****************************************************************************/
+
+int
+cmd_gatt_exchange_mtu(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_exchange_mtu(conn_handle);
+    if (rc != 0) {
+        console_printf("error exchanging mtu; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}

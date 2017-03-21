@@ -725,6 +725,21 @@ static const struct shell_cmd_help gatt_discover_full_help = {
     .params = gatt_discover_full_params,
 };
 
+/*****************************************************************************
+ * $gatt-exchange-mtu                                                        *
+ *****************************************************************************/
+
+static const struct shell_param gatt_exchange_mtu_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_exchange_mtu_help = {
+    .summary = "gatt_exchange_mtu",
+    .usage = "gatt_exchange_mtu usage",
+    .params = gatt_exchange_mtu_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -770,6 +785,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-discover-full",
         .cb = cmd_gatt_discover_full,
         .help = &gatt_discover_full_help,
+    },
+    {
+        .cmd_name = "gatt-exchange-mtu",
+        .cb = cmd_gatt_exchange_mtu,
+        .help = &gatt_exchange_mtu_help,
     },
     { NULL, NULL, NULL },
 };
