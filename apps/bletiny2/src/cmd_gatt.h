@@ -27,5 +27,6 @@ int cmd_gatt_discover_descriptor(int argc, char **argv);
 int cmd_gatt_discover_service(int argc, char **argv);
 int cmd_gatt_discover_full(int argc, char **argv);
 int cmd_gatt_exchange_mtu(int argc, char **argv);
+int cmd_gatt_read(int argc, char **argv);
 
 #endif

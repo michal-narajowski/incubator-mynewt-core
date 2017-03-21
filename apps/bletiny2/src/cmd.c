@@ -740,6 +740,27 @@ static const struct shell_cmd_help gatt_exchange_mtu_help = {
     .params = gatt_exchange_mtu_params,
 };
 
+/*****************************************************************************
+ * $gatt-read                                                                *
+ *****************************************************************************/
+
+static const struct shell_param gatt_read_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"long", "is read long, usage: =[0-1], default=0"},
+    {"attr", "attribute handle, usage: =<UINT16>"},
+    {"offset", "attribute handle, usage: =<UINT16>"},
+    {"uuid", "read by uuid, usage: =[UUID]"},
+    {"start", "start handle, usage: =<UINT16>"},
+    {"end", "end handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_read_help = {
+    .summary = "gatt_read",
+    .usage = "gatt_read usage",
+    .params = gatt_read_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -790,6 +811,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-exchange-mtu",
         .cb = cmd_gatt_exchange_mtu,
         .help = &gatt_exchange_mtu_help,
+    },
+    {
+        .cmd_name = "gatt-read",
+        .cb = cmd_gatt_read,
+        .help = &gatt_read_help,
     },
     { NULL, NULL, NULL },
 };

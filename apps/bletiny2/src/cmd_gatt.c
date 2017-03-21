@@ -187,3 +187,115 @@ cmd_gatt_exchange_mtu(int argc, char **argv)
 
     return 0;
 }
+
+/*****************************************************************************
+ * $gatt-read                                                                *
+ *****************************************************************************/
+
+#define CMD_READ_MAX_ATTRS  8
+
+int
+cmd_gatt_read(int argc, char **argv)
+{
+    static uint16_t attr_handles[CMD_READ_MAX_ATTRS];
+    uint16_t conn_handle;
+    uint16_t start;
+    uint16_t end;
+    uint16_t offset;
+    ble_uuid_any_t uuid;
+    uint8_t num_attr_handles;
+    int is_uuid;
+    int is_long;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    is_long = parse_arg_long("long", &rc);
+    if (rc == ENOENT) {
+        is_long = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'long' parameter\n");
+        return rc;
+    }
+
+    for (num_attr_handles = 0;
+         num_attr_handles < CMD_READ_MAX_ATTRS;
+         num_attr_handles++) {
+
+        attr_handles[num_attr_handles] = parse_arg_uint16("attr", &rc);
+        if (rc == ENOENT) {
+            break;
+        } else if (rc != 0) {
+            console_printf("invalid 'attr' parameter\n");
+            return rc;
+        }
+    }
+
+    rc = parse_arg_uuid("uuid", &uuid);
+    if (rc == ENOENT) {
+        is_uuid = 0;
+    } else if (rc == 0) {
+        is_uuid = 1;
+    } else {
+        console_printf("invalid 'uuid' parameter\n");
+        return rc;
+    }
+
+    start = parse_arg_uint16("start", &rc);
+    if (rc == ENOENT) {
+        start = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'start' parameter\n");
+        return rc;
+    }
+
+    end = parse_arg_uint16("end", &rc);
+    if (rc == ENOENT) {
+        end = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'end' parameter\n");
+        return rc;
+    }
+
+    offset = parse_arg_uint16("offset", &rc);
+    if (rc == ENOENT) {
+        offset = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'offset' parameter\n");
+        return rc;
+    }
+
+    if (num_attr_handles == 1) {
+        if (is_long) {
+            rc = bletiny_read_long(conn_handle, attr_handles[0], offset);
+        } else {
+            rc = bletiny_read(conn_handle, attr_handles[0]);
+        }
+    } else if (num_attr_handles > 1) {
+        rc = bletiny_read_mult(conn_handle, attr_handles, num_attr_handles);
+    } else if (is_uuid) {
+        if (start == 0 || end == 0) {
+            rc = EINVAL;
+        } else {
+            rc = bletiny_read_by_uuid(conn_handle, start, end, &uuid.u);
+        }
+    } else {
+        rc = EINVAL;
+    }
+
+    if (rc != 0) {
+        console_printf("error reading characteristic; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
