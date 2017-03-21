@@ -350,7 +350,7 @@ static const struct shell_param connect_params[] = {
     {"scan_interval", "usage: =[0-UINT16_MAX], default: 0x0010"},
     {"scan_window", "usage: =[0-UINT16_MAX], default: 0x0010"},
     {"interval_min", "usage: =[0-UINT16_MAX], default: 30"},
-    {"interval_max", "usage: =[0-UINT16_MAX], ,default: 50"},
+    {"interval_max", "usage: =[0-UINT16_MAX], default: 50"},
     {"latency", "usage: =[UINT16], default: 0"},
     {"timeout", "usage: =[UINT16], default: 0x0100"},
     {"min_conn_event_len", "usage: =[UINT16], default: 0x0010"},
@@ -404,8 +404,8 @@ cmd_disconnect(int argc, char **argv)
 }
 
 static const struct shell_param disconnect_params[] = {
-    {"conn", ""},
-    {"reason", ""},
+    {"conn", "connection_handle parameter, usage: =<UINT16>"},
+    {"reason", "disconnection reason, usage: =[UINT8], default: 19 (remote user terminated connection)"},
     {NULL, NULL}
 };
 
@@ -449,16 +449,16 @@ cmd_scan(int argc, char **argv)
         return 0;
     }
 
-    duration_ms = parse_arg_long_bounds_default("dur", 1, INT32_MAX,
+    duration_ms = parse_arg_long_bounds_default("duration", 1, INT32_MAX,
                                                 BLE_HS_FOREVER, &rc);
     if (rc != 0) {
-        console_printf("invalid 'dur' parameter\n");
+        console_printf("invalid 'duration' parameter\n");
         return rc;
     }
 
-    params.limited = parse_arg_bool_default("ltd", 0, &rc);
+    params.limited = parse_arg_bool_default("limited", 0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'ltd' parameter\n");
+        console_printf("invalid 'limited' parameter\n");
         return rc;
     }
 
@@ -468,9 +468,9 @@ cmd_scan(int argc, char **argv)
         return rc;
     }
 
-    params.itvl = parse_arg_uint16_dflt("itvl", 0, &rc);
+    params.itvl = parse_arg_uint16_dflt("interval", 0, &rc);
     if (rc != 0) {
-        console_printf("invalid 'itvl' parameter\n");
+        console_printf("invalid 'interval' parameter\n");
         return rc;
     }
 
@@ -481,9 +481,9 @@ cmd_scan(int argc, char **argv)
     }
 
     params.filter_policy = parse_arg_kv_default(
-        "filt", cmd_scan_filt_policies, BLE_HCI_SCAN_FILT_NO_WL, &rc);
+        "filter", cmd_scan_filt_policies, BLE_HCI_SCAN_FILT_NO_WL, &rc);
     if (rc != 0) {
-        console_printf("invalid 'filt' parameter\n");
+        console_printf("invalid 'filter' parameter\n");
         return rc;
     }
 
@@ -510,15 +510,15 @@ cmd_scan(int argc, char **argv)
 }
 
 static const struct shell_param scan_params[] = {
-    {"cancel", ""},
-    {"dur", ""},
-    {"ltd", ""},
-    {"passive", ""},
-    {"itvl", ""},
-    {"window", ""},
-    {"filt", ""},
-    {"nodups", ""},
-    {"own_addr_type", ""},
+    {"cancel", "cancel scan procedure"},
+    {"duration", "usage: =[1-INT32_MAX], default: INT32_MAX"},
+    {"limited", "usage: =[0-1], default: 0"},
+    {"passive", "usage: =[0-1], default: 0"},
+    {"interval", "usage: =[0-UINT16_MAX], default: 0"},
+    {"window", "usage: =[0-UINT16_MAX], default: 0"},
+    {"filter", "usage: =[no_wl|use_wl|no_wl_inita|use_wl_inita], default: no_wl"},
+    {"nodups", "usage: =[0-UINT16_MAX], default: 0"},
+    {"own_addr_type", "usage: =[public|random|rpa_pub|rpa_rnd], default: public"},
     {NULL, NULL}
 };
 
@@ -633,11 +633,10 @@ cmd_set(int argc, char **argv)
 }
 
 static const struct shell_param set_params[] = {
-    {"cancel", ""},
-    {"addr", ""},
-    {"addr_type", ""},
-    {"mtu", ""},
-    {"irk", ""},
+    {"addr", "set device address, usage: =[XX:XX:XX:XX:XX:XX]"},
+    {"addr_type", "set device address type, usage: =[public|random|public_id|random_id], default: public"},
+    {"mtu", "Maximum Transimssion Unit, usage: =[0-UINT16_MAX]"},
+    {"irk", "Identity Resolving Key, usage: =[XX:XX:XX:XX:XX:XX:XX:XX]"},
     {NULL, NULL}
 };
 
