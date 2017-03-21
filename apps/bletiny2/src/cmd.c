@@ -660,7 +660,7 @@ static const struct shell_param set_params[] = {
     {"addr", "set device address, usage: =[XX:XX:XX:XX:XX:XX]"},
     {"addr_type", "set device address type, usage: =[public|random|public_id|random_id], default: public"},
     {"mtu", "Maximum Transimssion Unit, usage: =[0-UINT16_MAX]"},
-    {"irk", "Identity Resolving Key, usage: =[XX:XX:XX:XX:XX:XX:XX:XX]"},
+    {"irk", "Identity Resolving Key, usage: =[XX:XX...], len=16 octets"},
     {NULL, NULL}
 };
 
