@@ -758,6 +758,20 @@ static const struct shell_cmd_help gatt_find_included_services_help = {
     .params = gatt_find_included_services_params,
 };
 
+/*****************************************************************************
+ * $gatt-notify                                                                *
+ *****************************************************************************/
+
+static const struct shell_param gatt_notify_params[] = {
+    {"attr", "attribute handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_notify_help = {
+    .summary = "gatt_notify",
+    .usage = "gatt_notify usage",
+    .params = gatt_notify_params,
+};
 
 /*****************************************************************************
  * $gatt-read                                                                *
@@ -944,6 +958,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-read",
         .cb = cmd_gatt_read,
         .help = &gatt_read_help,
+    },
+    {
+        .cmd_name = "gatt-notify",
+        .cb = cmd_gatt_notify,
+        .help = &gatt_notify_help,
     },
     {
         .cmd_name = "gatt-service-changed",

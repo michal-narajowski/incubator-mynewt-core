@@ -194,6 +194,32 @@ cmd_gatt_exchange_mtu(int argc, char **argv)
 }
 
 /*****************************************************************************
+ * $gatt-notify                                                              *
+ *****************************************************************************/
+
+int
+cmd_gatt_notify(int argc, char **argv)
+{
+    uint16_t attr_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    attr_handle = parse_arg_long("attr", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'attr' parameter\n");
+        return rc;
+    }
+
+    bletiny_chrup(attr_handle);
+
+    return 0;
+}
+
+/*****************************************************************************
  * $gatt-read                                                                *
  *****************************************************************************/
 
