@@ -740,6 +740,49 @@ static const struct shell_cmd_help white_list_help = {
     .params = white_list_params,
 };
 
+/*****************************************************************************
+ * $conn-rssi                                                                *
+ *****************************************************************************/
+
+static int
+cmd_conn_rssi(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    int8_t rssi;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_rssi(conn_handle, &rssi);
+    if (rc != 0) {
+        console_printf("error reading rssi; rc=%d\n", rc);
+        return rc;
+    }
+
+    console_printf("conn=%d rssi=%d\n", conn_handle, rssi);
+
+    return 0;
+}
+
+static const struct shell_param conn_rssi_params[] = {
+    {"conn", "connection handle parameter, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help conn_rssi_help = {
+    .summary = "conn_rssi",
+    .usage = "conn_rssi usage",
+    .params = conn_rssi_params,
+};
 
 /*****************************************************************************
  * $gatt-discover                                                            *
@@ -997,6 +1040,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "white-list",
         .cb = cmd_white_list,
         .help = &white_list_help,
+    },
+    {
+        .cmd_name = "conn-rssi",
+        .cb = cmd_conn_rssi,
+        .help = &conn_rssi_help,
     },
     {
         .cmd_name = "gatt-discover-characteristic",
