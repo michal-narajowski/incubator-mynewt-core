@@ -22,6 +22,7 @@
 
 #include "bsp/bsp.h"
 #include "host/ble_hs_mbuf.h"
+#include "services/gatt/ble_svc_gatt.h"
 #include "console/console.h"
 #include "bletiny.h"
 #include "cmd.h"
@@ -300,6 +301,40 @@ cmd_gatt_read(int argc, char **argv)
         console_printf("error reading characteristic; rc=%d\n", rc);
         return rc;
     }
+
+    return 0;
+}
+
+
+/*****************************************************************************
+ * $gatt-service-changed                                                     *
+ *****************************************************************************/
+
+int
+cmd_gatt_service_changed(int argc, char **argv)
+{
+    uint16_t start;
+    uint16_t end;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    start = parse_arg_uint16("start", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'start' parameter\n");
+        return rc;
+    }
+
+    end = parse_arg_uint16("end", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'end' parameter\n");
+        return rc;
+    }
+
+    ble_svc_gatt_changed(start, end);
 
     return 0;
 }

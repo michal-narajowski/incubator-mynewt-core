@@ -29,6 +29,7 @@ int cmd_gatt_discover_full(int argc, char **argv);
 int cmd_gatt_find_included_services(int argc, char **argv);
 int cmd_gatt_exchange_mtu(int argc, char **argv);
 int cmd_gatt_read(int argc, char **argv);
+int cmd_gatt_service_changed(int argc, char **argv);
 int cmd_gatt_write(int argc, char **argv);
 
 #endif

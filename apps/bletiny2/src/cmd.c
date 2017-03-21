@@ -781,6 +781,23 @@ static const struct shell_cmd_help gatt_read_help = {
 };
 
 /*****************************************************************************
+ * $gatt-service-changed                                                     *
+ *****************************************************************************/
+
+static const struct shell_param gatt_service_changed_params[] = {
+    {"start", "start handle, usage: =<UINT16>"},
+    {"end", "end handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_service_changed_help = {
+    .summary = "gatt_service_changed",
+    .usage = "gatt_service_changed usage",
+    .params = gatt_service_changed_params,
+};
+
+
+/*****************************************************************************
  * $gatt-write                                                                *
  *****************************************************************************/
 
@@ -927,6 +944,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-read",
         .cb = cmd_gatt_read,
         .help = &gatt_read_help,
+    },
+    {
+        .cmd_name = "gatt-service-changed",
+        .cb = cmd_gatt_service_changed,
+        .help = &gatt_service_changed_help,
     },
     {
         .cmd_name = "gatt-write",
