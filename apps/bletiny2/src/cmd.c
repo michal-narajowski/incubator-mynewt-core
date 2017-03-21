@@ -428,7 +428,7 @@ cmd_disconnect(int argc, char **argv)
 }
 
 static const struct shell_param disconnect_params[] = {
-    {"conn", "connection_handle parameter, usage: =<UINT16>"},
+    {"conn", "connection handle parameter, usage: =<UINT16>"},
     {"reason", "disconnection reason, usage: =[UINT8], default: 19 (remote user terminated connection)"},
     {NULL, NULL}
 };
