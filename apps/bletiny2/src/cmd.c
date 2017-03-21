@@ -785,6 +785,92 @@ static const struct shell_cmd_help conn_rssi_help = {
 };
 
 /*****************************************************************************
+ * $conn-update-params                                                       *
+ *****************************************************************************/
+
+static int
+cmd_conn_update_params(int argc, char **argv)
+{
+    struct ble_gap_upd_params params;
+    uint16_t conn_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    params.itvl_min = parse_arg_uint16_dflt(
+        "itvl_min", BLE_GAP_INITIAL_CONN_ITVL_MIN, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'itvl_min' parameter\n");
+        return rc;
+    }
+
+    params.itvl_max = parse_arg_uint16_dflt(
+        "itvl_max", BLE_GAP_INITIAL_CONN_ITVL_MAX, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'itvl_max' parameter\n");
+        return rc;
+    }
+
+    params.latency = parse_arg_uint16_dflt("latency", 0, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'latency' parameter\n");
+        return rc;
+    }
+
+    params.supervision_timeout = parse_arg_uint16_dflt("timeout", 0x0100, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'timeout' parameter\n");
+        return rc;
+    }
+
+    params.min_ce_len = parse_arg_uint16_dflt("min_ce_len", 0x0010, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'min_ce_len' parameter\n");
+        return rc;
+    }
+
+    params.max_ce_len = parse_arg_uint16_dflt("max_ce_len", 0x0300, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'max_ce_len' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_update_conn(conn_handle, &params);
+    if (rc != 0) {
+        console_printf("error updating connection; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param conn_update_params_params[] = {
+    {"conn", "conn_update_paramsion handle, usage: =<UINT16>"},
+    {"interval_min", "usage: =[0-UINT16_MAX], default: 30"},
+    {"interval_max", "usage: =[0-UINT16_MAX], default: 50"},
+    {"latency", "usage: =[UINT16], default: 0"},
+    {"timeout", "usage: =[UINT16], default: 0x0100"},
+    {"min_conn_event_len", "usage: =[UINT16], default: 0x0010"},
+    {"max_conn_event_len", "usage: =[UINT16], default: 0x0300"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help conn_update_params_help = {
+    .summary = "conn_update_params",
+    .usage = "conn_update_params usage",
+    .params = conn_update_params_params,
+};
+
+/*****************************************************************************
  * $gatt-discover                                                            *
  *****************************************************************************/
 
@@ -1045,6 +1131,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "conn-rssi",
         .cb = cmd_conn_rssi,
         .help = &conn_rssi_help,
+    },
+    {
+        .cmd_name = "conn-update-params",
+        .cb = cmd_conn_update_params,
+        .help = &conn_update_params_help,
     },
     {
         .cmd_name = "gatt-discover-characteristic",
