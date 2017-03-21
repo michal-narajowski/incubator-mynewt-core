@@ -43,6 +43,30 @@
 #define BTSHELL_MODULE "btshell"
 
 
+int
+cmd_parse_conn_start_end(uint16_t *out_conn, uint16_t *out_start,
+                         uint16_t *out_end)
+{
+    int rc;
+
+    *out_conn = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        return rc;
+    }
+
+    *out_start = parse_arg_uint16("start", &rc);
+    if (rc != 0) {
+        return rc;
+    }
+
+    *out_end = parse_arg_uint16("end", &rc);
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
+}
+
 static struct kv_pair cmd_own_addr_types[] = {
     { "public",     BLE_OWN_ADDR_PUBLIC },
     { "random",     BLE_OWN_ADDR_RANDOM },
