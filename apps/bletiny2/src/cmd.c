@@ -779,6 +779,26 @@ static const struct shell_cmd_help gatt_read_help = {
     .params = gatt_read_params,
 };
 
+/*****************************************************************************
+ * $gatt-write                                                                *
+ *****************************************************************************/
+
+static const struct shell_param gatt_write_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"no_rsp", "write without response, usage: =[0-1], default=0"},
+    {"long", "is write long, usage: =[0-1], default=0"},
+    {"attr", "attribute handle, usage: =<UINT16>"},
+    {"offset", "attribute handle, usage: =<UINT16>"},
+    {"value", "usage: =<octets>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_write_help = {
+    .summary = "gatt_write",
+    .usage = "gatt_write usage",
+    .params = gatt_write_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -839,6 +859,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-read",
         .cb = cmd_gatt_read,
         .help = &gatt_read_help,
+    },
+    {
+        .cmd_name = "gatt-write",
+        .cb = cmd_gatt_write,
+        .help = &gatt_write_help,
     },
     { NULL, NULL, NULL },
 };

@@ -20,11 +20,15 @@
 #include <inttypes.h>
 #include <errno.h>
 
+#include "bsp/bsp.h"
+#include "host/ble_hs_mbuf.h"
 #include "console/console.h"
 #include "bletiny.h"
 #include "cmd.h"
 #include "cmd_gatt.h"
 
+#define CMD_BUF_SZ      256
+static bssnz_t uint8_t cmd_buf[CMD_BUF_SZ];
 
 /*****************************************************************************
  * $gatt-discover                                                            *
@@ -330,4 +334,132 @@ cmd_gatt_find_included_services(int argc, char **argv)
     }
 
     return 0;
+}
+
+/*****************************************************************************
+ * $gatt-write                                                               *
+ *****************************************************************************/
+
+int
+cmd_gatt_write(int argc, char **argv)
+{
+    struct ble_gatt_attr attrs[MYNEWT_VAL(BLE_GATT_WRITE_MAX_ATTRS)] = { { 0 } };
+    uint16_t attr_handle;
+    uint16_t conn_handle;
+    uint16_t offset;
+    int total_attr_len;
+    int num_attrs;
+    int attr_len;
+    int is_long;
+    int no_rsp;
+    int rc;
+    int i;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    no_rsp = parse_arg_long("no_rsp", &rc);
+    if (rc == ENOENT) {
+        no_rsp = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'no_rsp' parameter\n");
+        return rc;
+    }
+
+    is_long = parse_arg_long("long", &rc);
+    if (rc == ENOENT) {
+        is_long = 0;
+    } else if (rc != 0) {
+        console_printf("invalid 'long' parameter\n");
+        return rc;
+    }
+
+    total_attr_len = 0;
+    num_attrs = 0;
+    while (1) {
+        attr_handle = parse_arg_long("attr", &rc);
+        if (rc == ENOENT) {
+            break;
+        } else if (rc != 0) {
+            rc = -rc;
+            console_printf("invalid 'attr' parameter\n");
+            goto done;
+        }
+
+        rc = parse_arg_byte_stream("value", sizeof cmd_buf - total_attr_len,
+                                   cmd_buf + total_attr_len, &attr_len);
+        if (rc == ENOENT) {
+            break;
+        } else if (rc != 0) {
+            console_printf("invalid 'value' parameter\n");
+            goto done;
+        }
+
+        offset = parse_arg_uint16("offset", &rc);
+        if (rc == ENOENT) {
+            offset = 0;
+        } else if (rc != 0) {
+            console_printf("invalid 'offset' parameter\n");
+            return rc;
+        }
+
+        if (num_attrs >= sizeof attrs / sizeof attrs[0]) {
+            rc = -EINVAL;
+            goto done;
+        }
+
+        attrs[num_attrs].handle = attr_handle;
+        attrs[num_attrs].offset = offset;
+        attrs[num_attrs].om = ble_hs_mbuf_from_flat(cmd_buf + total_attr_len,
+                                                    attr_len);
+        if (attrs[num_attrs].om == NULL) {
+            goto done;
+        }
+
+        total_attr_len += attr_len;
+        num_attrs++;
+    }
+
+    if (no_rsp) {
+        if (num_attrs != 1) {
+            rc = -EINVAL;
+            goto done;
+        }
+        rc = bletiny_write_no_rsp(conn_handle, attrs[0].handle, attrs[0].om);
+        attrs[0].om = NULL;
+    } else if (is_long) {
+        if (num_attrs != 1) {
+            rc = -EINVAL;
+            goto done;
+        }
+        rc = bletiny_write_long(conn_handle, attrs[0].handle,
+                                attrs[0].offset, attrs[0].om);
+        attrs[0].om = NULL;
+    } else if (num_attrs > 1) {
+        rc = bletiny_write_reliable(conn_handle, attrs, num_attrs);
+    } else if (num_attrs == 1) {
+        rc = bletiny_write(conn_handle, attrs[0].handle, attrs[0].om);
+        attrs[0].om = NULL;
+    } else {
+        rc = -EINVAL;
+    }
+
+done:
+    for (i = 0; i < sizeof attrs / sizeof attrs[0]; i++) {
+        os_mbuf_free_chain(attrs[i].om);
+    }
+
+    if (rc != 0) {
+        console_printf("error writing characteristic; rc=%d\n", rc);
+    }
+
+    return rc;
 }
