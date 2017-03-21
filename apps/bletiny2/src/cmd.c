@@ -741,6 +741,24 @@ static const struct shell_cmd_help gatt_exchange_mtu_help = {
 };
 
 /*****************************************************************************
+ * $gatt-find-included-services                                              *
+ *****************************************************************************/
+
+static const struct shell_param gatt_find_included_services_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"start", "start handle, usage: =<UINT16>"},
+    {"end", "end handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_find_included_services_help = {
+    .summary = "gatt_find_included_services",
+    .usage = "gatt_find_included_services usage",
+    .params = gatt_find_included_services_params,
+};
+
+
+/*****************************************************************************
  * $gatt-read                                                                *
  *****************************************************************************/
 
@@ -806,6 +824,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-discover-full",
         .cb = cmd_gatt_discover_full,
         .help = &gatt_discover_full_help,
+    },
+    {
+        .cmd_name = "gatt-find-included-services",
+        .cb = cmd_gatt_find_included_services,
+        .help = &gatt_find_included_services_help,
     },
     {
         .cmd_name = "gatt-exchange-mtu",

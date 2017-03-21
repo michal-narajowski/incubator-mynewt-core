@@ -299,3 +299,35 @@ cmd_gatt_read(int argc, char **argv)
 
     return 0;
 }
+
+/*****************************************************************************
+ * $gatt-find-included-services                                              *
+ *****************************************************************************/
+
+int
+cmd_gatt_find_included_services(int argc, char **argv)
+{
+    uint16_t start_handle;
+    uint16_t conn_handle;
+    uint16_t end_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = cmd_parse_conn_start_end(&conn_handle, &start_handle, &end_handle);
+    if (rc != 0) {
+        console_printf("invalid 'conn start end' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_find_inc_svcs(conn_handle, start_handle, end_handle);
+    if (rc != 0) {
+        console_printf("error finding included services; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
