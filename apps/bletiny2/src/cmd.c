@@ -85,6 +85,12 @@ static struct kv_pair cmd_peer_addr_types[] = {
     { NULL }
 };
 
+static struct kv_pair cmd_addr_type[] = {
+    { "public",     BLE_ADDR_PUBLIC },
+    { "random",     BLE_ADDR_RANDOM },
+    { NULL }
+};
+
 /*****************************************************************************
  * $advertise                                                                *
  *****************************************************************************/
@@ -673,6 +679,69 @@ static const struct shell_cmd_help set_help = {
 };
 
 /*****************************************************************************
+ * $white-list                                                               *
+ *****************************************************************************/
+
+#define CMD_WL_MAX_SZ   8
+
+static int
+cmd_white_list(int argc, char **argv)
+{
+    static ble_addr_t addrs[CMD_WL_MAX_SZ];
+    int addrs_cnt;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    addrs_cnt = 0;
+    while (1) {
+        if (addrs_cnt >= CMD_WL_MAX_SZ) {
+            return EINVAL;
+        }
+
+        rc = parse_arg_mac("addr", addrs[addrs_cnt].val);
+        if (rc == ENOENT) {
+            break;
+        } else if (rc != 0) {
+            console_printf("invalid 'addr' parameter\n");
+            return rc;
+        }
+
+        addrs[addrs_cnt].type = parse_arg_kv("addr_type", cmd_addr_type, &rc);
+        if (rc != 0) {
+            console_printf("invalid 'addr' parameter\n");
+            return rc;
+        }
+
+        addrs_cnt++;
+    }
+
+    if (addrs_cnt == 0) {
+        return EINVAL;
+    }
+
+    bletiny_wl_set(addrs, addrs_cnt);
+
+    return 0;
+}
+
+static const struct shell_param white_list_params[] = {
+    {"addr", "white_list device address, usage: =[XX:XX:XX:XX:XX:XX]"},
+    {"addr_type", "white_list device address type, usage: =[public|random]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help white_list_help = {
+    .summary = "white_list",
+    .usage = "white_list usage",
+    .params = white_list_params,
+};
+
+
+/*****************************************************************************
  * $gatt-discover                                                            *
  *****************************************************************************/
 
@@ -923,6 +992,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "set",
         .cb = cmd_set,
         .help = &set_help,
+    },
+    {
+        .cmd_name = "white-list",
+        .cb = cmd_white_list,
+        .help = &white_list_help,
     },
     {
         .cmd_name = "gatt-discover-characteristic",
