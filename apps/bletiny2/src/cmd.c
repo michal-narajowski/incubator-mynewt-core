@@ -39,6 +39,7 @@
 
 #include "cmd.h"
 #include "bletiny.h"
+#include "cmd_gatt.h"
 
 #define BTSHELL_MODULE "btshell"
 
@@ -670,6 +671,60 @@ static const struct shell_cmd_help set_help = {
     .params = set_params,
 };
 
+/*****************************************************************************
+ * $gatt-discover                                                            *
+ *****************************************************************************/
+
+static const struct shell_param gatt_discover_characteristic_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"uuid", "discover by uuid, usage: =[UUID]"},
+    {"start", "start handle, usage: =<UINT16>"},
+    {"end", "end handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_discover_characteristic_help = {
+    .summary = "gatt_discover_characteristic",
+    .usage = "gatt_discover_characteristic usage",
+    .params = gatt_discover_characteristic_params,
+};
+
+static const struct shell_param gatt_discover_descriptor_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"start", "start handle, usage: =<UINT16>"},
+    {"end", "end handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_discover_descriptor_help = {
+    .summary = "gatt_discover_descriptor",
+    .usage = "gatt_discover_descriptor usage",
+    .params = gatt_discover_descriptor_params,
+};
+
+static const struct shell_param gatt_discover_service_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"uuid", "discover by uuid, usage: =[UUID]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_discover_service_help = {
+    .summary = "gatt_discover_service",
+    .usage = "gatt_discover_service usage",
+    .params = gatt_discover_service_params,
+};
+
+static const struct shell_param gatt_discover_full_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_discover_full_help = {
+    .summary = "gatt_discover_full",
+    .usage = "gatt_discover_full usage",
+    .params = gatt_discover_full_params,
+};
+
 static const struct shell_cmd btshell_commands[] = {
     {
         .cmd_name = "advertise",
@@ -695,6 +750,26 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "set",
         .cb = cmd_set,
         .help = &set_help,
+    },
+    {
+        .cmd_name = "gatt-discover-characteristic",
+        .cb = cmd_gatt_discover_characteristic,
+        .help = &gatt_discover_characteristic_help,
+    },
+    {
+        .cmd_name = "gatt-discover-descriptor",
+        .cb = cmd_gatt_discover_descriptor,
+        .help = &gatt_discover_descriptor_help,
+    },
+    {
+        .cmd_name = "gatt-discover-service",
+        .cb = cmd_gatt_discover_service,
+        .help = &gatt_discover_service_help,
+    },
+    {
+        .cmd_name = "gatt-discover-full",
+        .cb = cmd_gatt_discover_full,
+        .help = &gatt_discover_full_help,
     },
     { NULL, NULL, NULL },
 };
