@@ -25,6 +25,7 @@
 
 #include "console.h"
 #include "shell.h"
+#include "syscfg/syscfg.h"
 
 #define SHELL_OS "os"
 

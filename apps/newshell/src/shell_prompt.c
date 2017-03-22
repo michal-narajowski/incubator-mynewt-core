@@ -23,6 +23,7 @@
 
 #include "console.h"
 #include "shell.h"
+#include "syscfg/syscfg.h"
 
 #define PROMPT_LEN 15
 #define SHELL_PROMPT "prompt"
