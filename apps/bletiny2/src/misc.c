@@ -121,3 +121,42 @@ print_conn_desc(const struct ble_gap_conn_desc *desc)
                    desc->sec_state.authenticated,
                    desc->sec_state.bonded);
 }
+
+static void
+print_dsc(struct bletiny_dsc *dsc)
+{
+    console_printf("            dsc_handle=%d uuid=", dsc->dsc.handle);
+    print_uuid(&dsc->dsc.uuid.u);
+    console_printf("\n");
+}
+
+static void
+print_chr(struct bletiny_chr *chr)
+{
+    struct bletiny_dsc *dsc;
+
+    console_printf("        def_handle=%d val_handle=%d properties=0x%02x "
+                   "uuid=", chr->chr.def_handle, chr->chr.val_handle,
+                   chr->chr.properties);
+    print_uuid(&chr->chr.uuid.u);
+    console_printf("\n");
+
+    SLIST_FOREACH(dsc, &chr->dscs, next) {
+        print_dsc(dsc);
+    }
+}
+
+void
+print_svc(struct bletiny_svc *svc)
+{
+    struct bletiny_chr *chr;
+
+    console_printf("    start=%d end=%d uuid=", svc->svc.start_handle,
+                   svc->svc.end_handle);
+    print_uuid(&svc->svc.uuid.u);
+    console_printf("\n");
+
+    SLIST_FOREACH(chr, &svc->chrs, next) {
+        print_chr(chr);
+    }
+}

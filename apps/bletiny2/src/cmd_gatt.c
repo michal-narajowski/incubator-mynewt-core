@@ -22,6 +22,7 @@
 
 #include "bsp/bsp.h"
 #include "host/ble_hs_mbuf.h"
+#include "host/ble_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 #include "console/console.h"
 #include "bletiny.h"
@@ -392,6 +393,104 @@ cmd_gatt_find_included_services(int argc, char **argv)
     if (rc != 0) {
         console_printf("error finding included services; rc=%d\n", rc);
         return rc;
+    }
+
+    return 0;
+}
+
+/*****************************************************************************
+ * $gatt-show                                                                *
+ *****************************************************************************/
+
+int
+cmd_gatt_show(int argc, char **argv)
+{
+    struct bletiny_conn *conn;
+    struct bletiny_svc *svc;
+    int i;
+
+    for (i = 0; i < bletiny_num_conns; i++) {
+        conn = bletiny_conns + i;
+
+        console_printf("CONNECTION: handle=%d\n", conn->handle);
+
+        SLIST_FOREACH(svc, &conn->svcs, next) {
+            print_svc(svc);
+        }
+    }
+
+    return 0;
+}
+
+int
+cmd_gatt_show_addr(int argc, char **argv)
+{
+    uint8_t id_addr[6];
+    int rc;
+
+    console_printf("public_id_addr=");
+    rc = ble_hs_id_copy_addr(BLE_ADDR_PUBLIC, id_addr, NULL);
+    if (rc == 0) {
+        print_addr(id_addr);
+    } else {
+        console_printf("none");
+    }
+
+    console_printf(" random_id_addr=");
+    rc = ble_hs_id_copy_addr(BLE_ADDR_RANDOM, id_addr, NULL);
+    if (rc == 0) {
+        print_addr(id_addr);
+    } else {
+        console_printf("none");
+    }
+    console_printf("\n");
+
+    return 0;
+}
+
+int
+cmd_gatt_show_conn(int argc, char **argv)
+{
+    struct ble_gap_conn_desc conn_desc;
+    struct bletiny_conn *conn;
+    int rc;
+    int i;
+
+    for (i = 0; i < bletiny_num_conns; i++) {
+        conn = bletiny_conns + i;
+
+        rc = ble_gap_conn_find(conn->handle, &conn_desc);
+        if (rc == 0) {
+            print_conn_desc(&conn_desc);
+        }
+    }
+
+    return 0;
+}
+
+int
+cmd_gatt_show_coc(int argc, char **argv)
+{
+    struct bletiny_conn *conn = NULL;
+    struct bletiny_l2cap_coc *coc;
+    int i, j;
+
+    for (i = 0; i < bletiny_num_conns; i++) {
+        conn = bletiny_conns + i;
+        if (!conn) {
+            break;
+        }
+
+        if (SLIST_EMPTY(&conn->coc_list)) {
+            continue;
+        }
+
+        console_printf("conn_handle: 0x%04x\n", conn->handle);
+        j = 0;
+        SLIST_FOREACH(coc, &conn->coc_list, next) {
+            console_printf("    idx: %i, chan pointer = 0x%08lx\n", j++,
+                           (uint32_t)coc->chan);
+        }
     }
 
     return 0;

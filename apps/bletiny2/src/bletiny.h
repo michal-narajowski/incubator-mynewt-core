@@ -176,6 +176,7 @@ uint16_t chr_end_handle(const struct bletiny_svc *svc,
                         const struct bletiny_chr *chr);
 int chr_is_empty(const struct bletiny_svc *svc, const struct bletiny_chr *chr);
 void print_conn_desc(const struct ble_gap_conn_desc *desc);
+void print_svc(struct bletiny_svc *svc);
 
 #ifdef __cplusplus
 }

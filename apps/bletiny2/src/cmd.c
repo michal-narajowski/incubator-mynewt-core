@@ -91,6 +91,8 @@ static struct kv_pair cmd_addr_type[] = {
     { NULL }
 };
 
+
+
 /*****************************************************************************
  * $advertise                                                                *
  *****************************************************************************/
@@ -1008,6 +1010,37 @@ static const struct shell_cmd_help gatt_service_changed_help = {
     .params = gatt_service_changed_params,
 };
 
+/*****************************************************************************
+ * $gatt-show                                                                *
+ *****************************************************************************/
+
+static const struct shell_param gatt_show_params[] = {
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help gatt_show_help = {
+    .summary = "gatt_show",
+    .usage = "gatt_show usage",
+    .params = gatt_show_params,
+};
+
+static const struct shell_cmd_help gatt_show_addr_help = {
+    .summary = "gatt_show_addr",
+    .usage = "gatt_show addr usage",
+    .params = gatt_show_params,
+};
+
+static const struct shell_cmd_help gatt_show_conn_help = {
+    .summary = "gatt_show_conn",
+    .usage = "gatt_show conn usage",
+    .params = gatt_show_params,
+};
+
+static const struct shell_cmd_help gatt_show_coc_help = {
+    .summary = "gatt_show_coc",
+    .usage = "gatt_show coc usage",
+    .params = gatt_show_params,
+};
 
 /*****************************************************************************
  * $gatt-write                                                                *
@@ -1181,6 +1214,26 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "gatt-service-changed",
         .cb = cmd_gatt_service_changed,
         .help = &gatt_service_changed_help,
+    },
+    {
+        .cmd_name = "gatt-show",
+        .cb = cmd_gatt_show,
+        .help = &gatt_show_help,
+    },
+    {
+        .cmd_name = "gatt-show-addr",
+        .cb = cmd_gatt_show_addr,
+        .help = &gatt_show_addr_help,
+    },
+    {
+        .cmd_name = "gatt-show-conn",
+        .cb = cmd_gatt_show_conn,
+        .help = &gatt_show_conn_help,
+    },
+    {
+        .cmd_name = "gatt-show-coc",
+        .cb = cmd_gatt_show_coc,
+        .help = &gatt_show_coc_help,
     },
     {
         .cmd_name = "gatt-write",
