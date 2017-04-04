@@ -63,6 +63,8 @@ int parse_arg_mac(char *name, uint8_t *dst);
 int parse_arg_uuid(char *name, ble_uuid_any_t *uuid);
 int parse_err_too_few_args(char *cmd_name);
 int parse_arg_all(int argc, char **argv);
+int parse_eddystone_url(char *full_url, uint8_t *out_scheme, char *out_body,
+                        uint8_t *out_body_len, uint8_t *out_suffix);
 int cmd_parse_conn_start_end(uint16_t *out_conn, uint16_t *out_start,
                              uint16_t *out_end);
 

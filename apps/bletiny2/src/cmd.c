@@ -681,6 +681,327 @@ static const struct shell_cmd_help set_help = {
 };
 
 /*****************************************************************************
+ * $set-adv-data                                                             *
+ *****************************************************************************/
+
+#define CMD_ADV_DATA_MAX_UUIDS16                8
+#define CMD_ADV_DATA_MAX_UUIDS32                8
+#define CMD_ADV_DATA_MAX_UUIDS128               2
+#define CMD_ADV_DATA_MAX_PUBLIC_TGT_ADDRS       8
+#define CMD_ADV_DATA_SVC_DATA_UUID16_MAX_LEN    BLE_HS_ADV_MAX_FIELD_SZ
+#define CMD_ADV_DATA_SVC_DATA_UUID32_MAX_LEN    BLE_HS_ADV_MAX_FIELD_SZ
+#define CMD_ADV_DATA_SVC_DATA_UUID128_MAX_LEN   BLE_HS_ADV_MAX_FIELD_SZ
+#define CMD_ADV_DATA_URI_MAX_LEN                BLE_HS_ADV_MAX_FIELD_SZ
+#define CMD_ADV_DATA_MFG_DATA_MAX_LEN           BLE_HS_ADV_MAX_FIELD_SZ
+
+static int
+cmd_set_adv_data(int argc, char **argv)
+{
+    static bssnz_t ble_uuid16_t uuids16[CMD_ADV_DATA_MAX_UUIDS16];
+    static bssnz_t ble_uuid32_t uuids32[CMD_ADV_DATA_MAX_UUIDS32];
+    static bssnz_t ble_uuid128_t uuids128[CMD_ADV_DATA_MAX_UUIDS128];
+    static bssnz_t uint8_t
+        public_tgt_addrs[CMD_ADV_DATA_MAX_PUBLIC_TGT_ADDRS]
+                        [BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN];
+    static bssnz_t uint8_t slave_itvl_range[BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN];
+    static bssnz_t uint8_t
+        svc_data_uuid16[CMD_ADV_DATA_SVC_DATA_UUID16_MAX_LEN];
+    static bssnz_t uint8_t
+        svc_data_uuid32[CMD_ADV_DATA_SVC_DATA_UUID32_MAX_LEN];
+    static bssnz_t uint8_t
+        svc_data_uuid128[CMD_ADV_DATA_SVC_DATA_UUID128_MAX_LEN];
+    static bssnz_t uint8_t uri[CMD_ADV_DATA_URI_MAX_LEN];
+    static bssnz_t uint8_t mfg_data[CMD_ADV_DATA_MFG_DATA_MAX_LEN];
+    struct ble_hs_adv_fields adv_fields;
+    uint32_t uuid32;
+    uint16_t uuid16;
+    uint8_t uuid128[16];
+    uint8_t public_tgt_addr[BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN];
+    uint8_t eddystone_url_body_len;
+    uint8_t eddystone_url_suffix;
+    uint8_t eddystone_url_scheme;
+    char eddystone_url_body[BLE_EDDYSTONE_URL_MAX_LEN];
+    char *eddystone_url_full;
+    int svc_data_uuid16_len;
+    int svc_data_uuid32_len;
+    int svc_data_uuid128_len;
+    int uri_len;
+    int mfg_data_len;
+    int tmp;
+    int rc;
+
+    memset(&adv_fields, 0, sizeof adv_fields);
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    tmp = parse_arg_long_bounds("flags", 0, UINT8_MAX, &rc);
+    if (rc == 0) {
+        adv_fields.flags = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'flags' parameter\n");
+        return rc;
+    }
+
+    while (1) {
+        uuid16 = parse_arg_uint16("uuid16", &rc);
+        if (rc == 0) {
+            if (adv_fields.num_uuids16 >= CMD_ADV_DATA_MAX_UUIDS16) {
+                console_printf("invalid 'uuid16' parameter\n");
+                return EINVAL;
+            }
+            uuids16[adv_fields.num_uuids16] = (ble_uuid16_t) BLE_UUID16_INIT(uuid16);
+            adv_fields.num_uuids16++;
+        } else if (rc == ENOENT) {
+            break;
+        } else {
+            console_printf("invalid 'uuid16' parameter\n");
+            return rc;
+        }
+    }
+    if (adv_fields.num_uuids16 > 0) {
+        adv_fields.uuids16 = uuids16;
+    }
+
+    tmp = parse_arg_long("uuids16_is_complete", &rc);
+    if (rc == 0) {
+        adv_fields.uuids16_is_complete = !!tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'uuids16_is_complete' parameter\n");
+        return rc;
+    }
+
+    while (1) {
+        uuid32 = parse_arg_uint32("uuid32", &rc);
+        if (rc == 0) {
+            if (adv_fields.num_uuids32 >= CMD_ADV_DATA_MAX_UUIDS32) {
+                console_printf("invalid 'uuid32' parameter\n");
+                return EINVAL;
+            }
+            uuids32[adv_fields.num_uuids32] = (ble_uuid32_t) BLE_UUID32_INIT(uuid32);
+            adv_fields.num_uuids32++;
+        } else if (rc == ENOENT) {
+            break;
+        } else {
+            console_printf("invalid 'uuid32' parameter\n");
+            return rc;
+        }
+    }
+    if (adv_fields.num_uuids32 > 0) {
+        adv_fields.uuids32 = uuids32;
+    }
+
+    tmp = parse_arg_long("uuids32_is_complete", &rc);
+    if (rc == 0) {
+        adv_fields.uuids32_is_complete = !!tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'uuids32_is_complete' parameter\n");
+        return rc;
+    }
+
+    while (1) {
+        rc = parse_arg_byte_stream_exact_length("uuid128", uuid128, 16);
+        if (rc == 0) {
+            if (adv_fields.num_uuids128 >= CMD_ADV_DATA_MAX_UUIDS128) {
+                console_printf("invalid 'uuid128' parameter\n");
+                return EINVAL;
+            }
+            ble_uuid_init_from_buf((ble_uuid_any_t *) &uuids128[adv_fields.num_uuids128],
+                                   uuid128, 16);
+            adv_fields.num_uuids128++;
+        } else if (rc == ENOENT) {
+            break;
+        } else {
+            console_printf("invalid 'uuid128' parameter\n");
+            return rc;
+        }
+    }
+    if (adv_fields.num_uuids128 > 0) {
+        adv_fields.uuids128 = uuids128;
+    }
+
+    tmp = parse_arg_long("uuids128_is_complete", &rc);
+    if (rc == 0) {
+        adv_fields.uuids128_is_complete = !!tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'uuids128_is_complete' parameter\n");
+        return rc;
+    }
+
+    adv_fields.name = (uint8_t *)parse_arg_extract("name");
+    if (adv_fields.name != NULL) {
+        adv_fields.name_len = strlen((char *)adv_fields.name);
+    }
+
+    tmp = parse_arg_long_bounds("tx_power_level", INT8_MIN, INT8_MAX, &rc);
+    if (rc == 0) {
+        adv_fields.tx_pwr_lvl = tmp;
+        adv_fields.tx_pwr_lvl_is_present = 1;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'tx_power_level' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream_exact_length("slave_interval_range",
+                                            slave_itvl_range,
+                                            BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN);
+    if (rc == 0) {
+        adv_fields.slave_itvl_range = slave_itvl_range;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'slave_interval_range' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream("service_data_uuid16",
+                               CMD_ADV_DATA_SVC_DATA_UUID16_MAX_LEN,
+                               svc_data_uuid16, &svc_data_uuid16_len);
+    if (rc == 0) {
+        adv_fields.svc_data_uuid16 = svc_data_uuid16;
+        adv_fields.svc_data_uuid16_len = svc_data_uuid16_len;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'service_data_uuid16' parameter\n");
+        return rc;
+    }
+
+    while (1) {
+        rc = parse_arg_byte_stream_exact_length(
+            "public_target_address", public_tgt_addr,
+            BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN);
+        if (rc == 0) {
+            if (adv_fields.num_public_tgt_addrs >=
+                CMD_ADV_DATA_MAX_PUBLIC_TGT_ADDRS) {
+
+                console_printf("invalid 'public_target_address' parameter\n");
+                return EINVAL;
+            }
+            memcpy(public_tgt_addrs[adv_fields.num_public_tgt_addrs],
+                   public_tgt_addr, BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN);
+            adv_fields.num_public_tgt_addrs++;
+        } else if (rc == ENOENT) {
+            break;
+        } else {
+            console_printf("invalid 'public_target_address' parameter\n");
+            return rc;
+        }
+    }
+    if (adv_fields.num_public_tgt_addrs > 0) {
+        adv_fields.public_tgt_addr = (void *)public_tgt_addrs;
+    }
+
+    adv_fields.appearance = parse_arg_uint16("appearance", &rc);
+    if (rc == 0) {
+        adv_fields.appearance_is_present = 1;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'appearance' parameter\n");
+        return rc;
+    }
+
+    adv_fields.adv_itvl = parse_arg_uint16("advertising_interval", &rc);
+    if (rc == 0) {
+        adv_fields.adv_itvl_is_present = 1;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'advertising_interval' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream("service_data_uuid32",
+                               CMD_ADV_DATA_SVC_DATA_UUID32_MAX_LEN,
+                               svc_data_uuid32, &svc_data_uuid32_len);
+    if (rc == 0) {
+        adv_fields.svc_data_uuid32 = svc_data_uuid32;
+        adv_fields.svc_data_uuid32_len = svc_data_uuid32_len;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'service_data_uuid32' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream("service_data_uuid128",
+                               CMD_ADV_DATA_SVC_DATA_UUID128_MAX_LEN,
+                               svc_data_uuid128, &svc_data_uuid128_len);
+    if (rc == 0) {
+        adv_fields.svc_data_uuid128 = svc_data_uuid128;
+        adv_fields.svc_data_uuid128_len = svc_data_uuid128_len;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'service_data_uuid128' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream("uri", CMD_ADV_DATA_URI_MAX_LEN, uri, &uri_len);
+    if (rc == 0) {
+        adv_fields.uri = uri;
+        adv_fields.uri_len = uri_len;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'uri' parameter\n");
+        return rc;
+    }
+
+    rc = parse_arg_byte_stream("mfg_data", CMD_ADV_DATA_MFG_DATA_MAX_LEN,
+                               mfg_data, &mfg_data_len);
+    if (rc == 0) {
+        adv_fields.mfg_data = mfg_data;
+        adv_fields.mfg_data_len = mfg_data_len;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'mfg_data' parameter\n");
+        return rc;
+    }
+
+    eddystone_url_full = parse_arg_extract("eddystone_url");
+    if (eddystone_url_full != NULL) {
+        rc = parse_eddystone_url(eddystone_url_full, &eddystone_url_scheme,
+                                 eddystone_url_body,
+                                 &eddystone_url_body_len,
+                                 &eddystone_url_suffix);
+        if (rc != 0) {
+            return rc;
+        }
+
+        rc = ble_eddystone_set_adv_data_url(&adv_fields, eddystone_url_scheme,
+                                            eddystone_url_body,
+                                            eddystone_url_body_len,
+                                            eddystone_url_suffix);
+    } else {
+        rc = bletiny_set_adv_data(&adv_fields);
+    }
+    if (rc != 0) {
+        console_printf("error setting advertisement data; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param set_adv_data_params[] = {
+    {"flags", "usage: =[0-UINT8_MAX]"},
+    {"uuid16", "usage: =[UINT16]"},
+    {"uuid16_is_complete", "usage: =[0-1]"},
+    {"uuid32", "usage: =[UINT32]"},
+    {"uuid32_is_complete", "usage: =[0-1]"},
+    {"uuid128", "usage: =[XX:XX...], len=16 octets"},
+    {"uuid128_is_complete", "usage: =[0-1]"},
+    {"tx_power_level", "usage: =[INT8_MIN-INT8_MAX]"},
+    {"slave_interval_range", "usage: =[XX:XX:XX:XX]"},
+    {"public_target_address", "usage: =[XX:XX:XX:XX:XX:XX]"},
+    {"appearance", "usage: =[UINT16]"},
+    {"name", "usage: =[string]"},
+    {"advertising_interval", "usage: =[UINT16]"},
+    {"service_data_uuid16", "usage: =[XX:XX...]"},
+    {"service_data_uuid32", "usage: =[XX:XX...]"},
+    {"service_data_uuid128", "usage: =[XX:XX...]"},
+    {"uri", "usage: =[XX:XX...]"},
+    {"mfg_data", "usage: =[XX:XX...]"},
+    {"eddystone_url", "usage: =[string]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help set_adv_data_help = {
+    .summary = "set_adv_data",
+    .usage = "set_adv_data usage",
+    .params = set_adv_data_params,
+};
+
+/*****************************************************************************
  * $white-list                                                               *
  *****************************************************************************/
 
@@ -1221,6 +1542,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "set",
         .cb = cmd_set,
         .help = &set_help,
+    },
+    {
+        .cmd_name = "set-adv-data",
+        .cb = cmd_set_adv_data,
+        .help = &set_adv_data_help,
     },
     {
         .cmd_name = "white-list",
