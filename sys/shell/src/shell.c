@@ -491,7 +491,8 @@ complete_param(char *line, uint8_t len, const char *param_prefix,
 
         /* more commands match, print first match */
         if (first_match && (common_chars < 0)) {
-            console_printf("\n%s\n", first_match);
+            console_printf("\n");
+            console_printf("%s\n", first_match);
             common_chars = strlen(first_match);
         }
 
@@ -554,7 +555,8 @@ complete_command(char *line, uint8_t len, char *command_prefix,
 
         /* more commands match, print first match */
         if (first_match && (common_chars < 0)) {
-            console_printf("\n%s\n", first_match);
+            console_printf("\n");
+            console_printf("%s\n", first_match);
             common_chars = strlen(first_match);
         }
 
@@ -632,7 +634,8 @@ complete_module(char *line, int len, char *module_prefix, int module_len)
 
         /* more commands match, print first match */
         if (first_match && (common_chars < 0)) {
-            console_printf("\n%s\n", first_match);
+            console_printf("\n");
+            console_printf("%s\n", first_match);
             common_chars = strlen(first_match);
         }
 
@@ -806,7 +809,8 @@ shell_register_default_module(const char *name)
     int result = set_default_module(name);
 
     if (result != -1) {
-        console_printf("\n%s", default_module_prompt);
+        console_printf("\n");
+        console_printf("%s", default_module_prompt);
     }
 }
 
