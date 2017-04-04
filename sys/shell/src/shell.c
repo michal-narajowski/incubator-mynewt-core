@@ -30,16 +30,13 @@
 
 #define SHELL_PROMPT "shell> "
 
-#define ARGC_MAX                10
 #define MODULE_NAME_MAX_LEN     20
-#define COMMAND_MAX_LEN         50
 
 /* additional chars are "> " (include '\0' )*/
 #define PROMPT_SUFFIX 3
 #define PROMPT_MAX_LEN (MODULE_NAME_MAX_LEN + PROMPT_SUFFIX)
 
-#define MAX_MODULES 4
-static struct shell_module shell_modules[MAX_MODULES];
+static struct shell_module shell_modules[MYNEWT_VAL(SHELL_MAX_MODULES)];
 static size_t num_of_shell_entities;
 
 static const char *prompt;
@@ -49,11 +46,10 @@ static int default_module = -1;
 static shell_cmd_function_t app_cmd_handler;
 static shell_prompt_function_t app_prompt_handler;
 
-#define MAX_CMD_QUEUED 1
-static struct console_input buf[MAX_CMD_QUEUED];
+static struct console_input buf[MYNEWT_VAL(SHELL_MAX_CMD_QUEUED)];
 
 static struct os_eventq avail_queue;
-static struct os_event shell_console_ev[MAX_CMD_QUEUED];
+static struct os_event shell_console_ev[MYNEWT_VAL(SHELL_MAX_CMD_QUEUED)];
 
 static const char *
 get_prompt(void)
@@ -338,7 +334,7 @@ get_cb(int argc, char *argv[])
 static void
 shell(struct os_event *ev)
 {
-    char *argv[ARGC_MAX + 1];
+    char *argv[MYNEWT_VAL(SHELL_CMD_ARGC_MAX) + 1];
     size_t argc;
     struct console_input *cmd;
     shell_cmd_function_t cb;
@@ -355,7 +351,7 @@ shell(struct os_event *ev)
         return;
     }
 
-    argc = line2argv(cmd->line, argv, ARGC_MAX + 1);
+    argc = line2argv(cmd->line, argv, MYNEWT_VAL(SHELL_CMD_ARGC_MAX) + 1);
     if (!argc) {
         os_eventq_put(&avail_queue, ev);
         console_printf("%s", get_prompt());
@@ -821,7 +817,7 @@ line_queue_init(void)
 {
     int i;
 
-    for (i = 0; i < MAX_CMD_QUEUED; i++) {
+    for (i = 0; i < MYNEWT_VAL(SHELL_MAX_CMD_QUEUED); i++) {
         shell_console_ev[i].ev_cb = shell;
         shell_console_ev[i].ev_arg = &buf[i];
         os_eventq_put(&avail_queue, &shell_console_ev[i]);
@@ -831,7 +827,7 @@ line_queue_init(void)
 int
 shell_register(const char *module_name, const struct shell_cmd *commands)
 {
-    if (num_of_shell_entities >= MAX_MODULES) {
+    if (num_of_shell_entities >= MYNEWT_VAL(SHELL_MAX_MODULES)) {
         return -1;
     }
 
