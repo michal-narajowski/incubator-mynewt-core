@@ -1002,6 +1002,108 @@ static const struct shell_cmd_help set_adv_data_help = {
 };
 
 /*****************************************************************************
+ * $set-sm-data                                                              *
+ *****************************************************************************/
+
+static int
+cmd_set_sm_data(int argc, char **argv)
+{
+    uint8_t tmp;
+    int good;
+    int rc;
+
+    good = 0;
+
+    tmp = parse_arg_bool("oob_flag", &rc);
+    if (rc == 0) {
+        ble_hs_cfg.sm_oob_data_flag = tmp;
+        good++;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'oob_flag' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("mitm_flag", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_mitm = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'mitm_flag' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("io_capabilities", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_io_cap = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'io_capabilities' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("our_key_dist", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_our_key_dist = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'our_key_dist' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("their_key_dist", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_their_key_dist = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'their_key_dist' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("bonding", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_bonding = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'bonding' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("sc", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_sc = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'sc' parameter\n");
+        return rc;
+    }
+
+    if (!good) {
+        console_printf("Error: no valid settings specified\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static const struct shell_param set_sm_data_params[] = {
+    {"oob_flag", "usage: =[0-1]"},
+    {"mitm_flag", "usage: =[0-1]"},
+    {"io_capabilities", "usage: =[UINT8]"},
+    {"our_key_dist", "usage: =[UINT8]"},
+    {"their_key_dist", "usage: =[UINT8]"},
+    {"bonding", "usage: =[0-1]"},
+    {"sc", "usage: =[0-1]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help set_sm_data_help = {
+    .summary = "set_sm_data",
+    .usage = "set_sm_data usage",
+    .params = set_sm_data_params,
+};
+
+
+/*****************************************************************************
  * $white-list                                                               *
  *****************************************************************************/
 
@@ -1547,6 +1649,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "set-adv-data",
         .cb = cmd_set_adv_data,
         .help = &set_adv_data_help,
+    },
+    {
+        .cmd_name = "set-sm-data",
+        .cb = cmd_set_sm_data,
+        .help = &set_sm_data_help,
     },
     {
         .cmd_name = "white-list",
