@@ -33,6 +33,9 @@ syscfg.defs:
     SHELL_CMD_HELP:
         description: 'Include help information for shell commands'
         value: 1
+    SHELL_COMPLETION:
+        description: 'Include completion functionality'
+        value: 1
 
     SHELL_OS_MODULE:
         description: 'Include shell os module'

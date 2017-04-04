@@ -166,21 +166,6 @@ get_command_and_module(char *argv[], int *module)
 }
 
 static int
-get_command_from_module(const char *command, int len, int module)
-{
-    int i;
-    const struct shell_module *shell_module;
-
-    shell_module = &shell_modules[module];
-    for (i = 0; shell_module->commands[i].cmd_name; i++) {
-        if (!strncmp(command, shell_module->commands[i].cmd_name, len)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static int
 show_cmd_help(char *argv[])
 {
     const char *command = NULL;
@@ -234,23 +219,6 @@ print_module_commands(const int module)
         console_printf(" - %s", shell_module->commands[i].help->summary);
         }
         console_printf("\n");
-    }
-}
-
-static void
-print_command_params(const int module, const int command)
-{
-    const struct shell_module *shell_module = &shell_modules[module];
-    const struct shell_cmd *shell_cmd = &shell_module->commands[command];
-    int i;
-
-    if (!(shell_cmd->help && shell_cmd->help->params)) {
-        return;
-    }
-
-    for (i = 0; shell_cmd->help->params[i].param_name; i++) {
-        console_printf("%s - %s\n", shell_cmd->help->params[i].param_name,
-                       shell_cmd->help->params[i].help);
     }
 }
 
@@ -421,6 +389,40 @@ shell(struct os_event *ev)
 
     os_eventq_put(&avail_queue, ev);
     console_printf("%s", get_prompt());
+}
+
+#if MYNEWT_VAL(SHELL_COMPLETION)
+
+static void
+print_command_params(const int module, const int command)
+{
+    const struct shell_module *shell_module = &shell_modules[module];
+    const struct shell_cmd *shell_cmd = &shell_module->commands[command];
+    int i;
+
+    if (!(shell_cmd->help && shell_cmd->help->params)) {
+        return;
+    }
+
+    for (i = 0; shell_cmd->help->params[i].param_name; i++) {
+        console_printf("%s - %s\n", shell_cmd->help->params[i].param_name,
+                       shell_cmd->help->params[i].help);
+    }
+}
+
+static int
+get_command_from_module(const char *command, int len, int module)
+{
+    int i;
+    const struct shell_module *shell_module;
+
+    shell_module = &shell_modules[module];
+    for (i = 0; shell_module->commands[i].cmd_name; i++) {
+        if (!strncmp(command, shell_module->commands[i].cmd_name, len)) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 static int
@@ -789,6 +791,7 @@ completion(char *line, uint8_t len)
     }
     return complete_param(line, len, cur, tok_len, module, command);
 }
+#endif /* MYNEWT_VAL(SHELL_COMPLETION) */
 
 void
 shell_register_app_cmd_handler(shell_cmd_function_t handler)
@@ -852,7 +855,11 @@ shell_init(void)
     os_eventq_init(&avail_queue);
     line_queue_init();
     prompt = SHELL_PROMPT;
+#if MYNEWT_VAL(SHELL_COMPLETION)
     console_init(&avail_queue, os_eventq_dflt_get(), completion);
+#else
+    console_init(&avail_queue, os_eventq_dflt_get(), NULL);
+#endif
 
 #if MYNEWT_VAL(SHELL_OS_MODULE)
     shell_os_register(shell_register);
