@@ -1004,108 +1004,6 @@ static const struct shell_cmd_help set_adv_data_help = {
 };
 
 /*****************************************************************************
- * $set-sm-data                                                              *
- *****************************************************************************/
-
-static int
-cmd_set_sm_data(int argc, char **argv)
-{
-    uint8_t tmp;
-    int good;
-    int rc;
-
-    good = 0;
-
-    tmp = parse_arg_bool("oob_flag", &rc);
-    if (rc == 0) {
-        ble_hs_cfg.sm_oob_data_flag = tmp;
-        good++;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'oob_flag' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_bool("mitm_flag", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_mitm = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'mitm_flag' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_uint8("io_capabilities", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_io_cap = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'io_capabilities' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_uint8("our_key_dist", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_our_key_dist = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'our_key_dist' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_uint8("their_key_dist", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_their_key_dist = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'their_key_dist' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_bool("bonding", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_bonding = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'bonding' parameter\n");
-        return rc;
-    }
-
-    tmp = parse_arg_bool("sc", &rc);
-    if (rc == 0) {
-        good++;
-        ble_hs_cfg.sm_sc = tmp;
-    } else if (rc != ENOENT) {
-        console_printf("invalid 'sc' parameter\n");
-        return rc;
-    }
-
-    if (!good) {
-        console_printf("Error: no valid settings specified\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-static const struct shell_param set_sm_data_params[] = {
-    {"oob_flag", "usage: =[0-1]"},
-    {"mitm_flag", "usage: =[0-1]"},
-    {"io_capabilities", "usage: =[UINT8]"},
-    {"our_key_dist", "usage: =[UINT8]"},
-    {"their_key_dist", "usage: =[UINT8]"},
-    {"bonding", "usage: =[0-1]"},
-    {"sc", "usage: =[0-1]"},
-    {NULL, NULL}
-};
-
-static const struct shell_cmd_help set_sm_data_help = {
-    .summary = "set_sm_data",
-    .usage = "set_sm_data usage",
-    .params = set_sm_data_params,
-};
-
-
-/*****************************************************************************
  * $white-list                                                               *
  *****************************************************************************/
 
@@ -1352,110 +1250,6 @@ static const struct shell_cmd_help conn_datalen_help = {
     .summary = "conn_datalen",
     .usage = "conn_datalen usage",
     .params = conn_datalen_params,
-};
-
-/*****************************************************************************
- * $auth-passkey                                                             *
- *****************************************************************************/
-
-static int
-cmd_auth_passkey(int argc, char **argv)
-{
-#if !NIMBLE_BLE_SM
-    return BLE_HS_ENOTSUP;
-#endif
-
-    uint16_t conn_handle;
-    struct ble_sm_io pk;
-    char *yesno;
-    int rc;
-
-    rc = parse_arg_all(argc - 1, argv + 1);
-    if (rc != 0) {
-        return rc;
-    }
-
-    conn_handle = parse_arg_uint16("conn", &rc);
-    if (rc != 0) {
-        console_printf("invalid 'conn' parameter\n");
-        return rc;
-    }
-
-    pk.action = parse_arg_uint16("action", &rc);
-    if (rc != 0) {
-        console_printf("invalid 'action' parameter\n");
-        return rc;
-    }
-
-    switch (pk.action) {
-        case BLE_SM_IOACT_INPUT:
-        case BLE_SM_IOACT_DISP:
-           /* passkey is 6 digit number */
-           pk.passkey = parse_arg_long_bounds("key", 0, 999999, &rc);
-           if (rc != 0) {
-               console_printf("invalid 'key' parameter\n");
-               return rc;
-           }
-           break;
-
-        case BLE_SM_IOACT_OOB:
-            rc = parse_arg_byte_stream_exact_length("oob", pk.oob, 16);
-            if (rc != 0) {
-                console_printf("invalid 'oob' parameter\n");
-                return rc;
-            }
-            break;
-
-        case BLE_SM_IOACT_NUMCMP:
-            yesno = parse_arg_extract("yesno");
-            if (yesno == NULL) {
-                console_printf("invalid 'yesno' parameter\n");
-                return EINVAL;
-            }
-
-            switch (yesno[0]) {
-            case 'y':
-            case 'Y':
-                pk.numcmp_accept = 1;
-                break;
-            case 'n':
-            case 'N':
-                pk.numcmp_accept = 0;
-                break;
-
-            default:
-                console_printf("invalid 'yesno' parameter\n");
-                return EINVAL;
-            }
-            break;
-
-       default:
-         console_printf("invalid passkey action action=%d\n", pk.action);
-         return EINVAL;
-    }
-
-    rc = ble_sm_inject_io(conn_handle, &pk);
-    if (rc != 0) {
-        console_printf("error providing passkey; rc=%d\n", rc);
-        return rc;
-    }
-
-    return 0;
-}
-
-static const struct shell_param auth_passkey_params[] = {
-    {"conn", "auth_passkeyion handle, usage: =<UINT16>"},
-    {"action", "usage: =<UINT16>"},
-    {"key", "usage: =[0-999999]"},
-    {"oob", "usage: =[XX:XX...], len=16 octets"},
-    {"yesno", "usage: =[string]"},
-    {NULL, NULL}
-};
-
-static const struct shell_cmd_help auth_passkey_help = {
-    .summary = "auth_passkey",
-    .usage = "auth_passkey usage",
-    .params = auth_passkey_params,
 };
 
 /*****************************************************************************
@@ -1761,6 +1555,111 @@ static const struct shell_cmd_help keystore_show_help = {
     .params = keystore_show_params,
 };
 
+#if NIMBLE_BLE_SM
+/*****************************************************************************
+ * $auth-passkey                                                             *
+ *****************************************************************************/
+
+static int
+cmd_auth_passkey(int argc, char **argv)
+{
+#if !NIMBLE_BLE_SM
+    return BLE_HS_ENOTSUP;
+#endif
+
+    uint16_t conn_handle;
+    struct ble_sm_io pk;
+    char *yesno;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    pk.action = parse_arg_uint16("action", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'action' parameter\n");
+        return rc;
+    }
+
+    switch (pk.action) {
+        case BLE_SM_IOACT_INPUT:
+        case BLE_SM_IOACT_DISP:
+           /* passkey is 6 digit number */
+           pk.passkey = parse_arg_long_bounds("key", 0, 999999, &rc);
+           if (rc != 0) {
+               console_printf("invalid 'key' parameter\n");
+               return rc;
+           }
+           break;
+
+        case BLE_SM_IOACT_OOB:
+            rc = parse_arg_byte_stream_exact_length("oob", pk.oob, 16);
+            if (rc != 0) {
+                console_printf("invalid 'oob' parameter\n");
+                return rc;
+            }
+            break;
+
+        case BLE_SM_IOACT_NUMCMP:
+            yesno = parse_arg_extract("yesno");
+            if (yesno == NULL) {
+                console_printf("invalid 'yesno' parameter\n");
+                return EINVAL;
+            }
+
+            switch (yesno[0]) {
+            case 'y':
+            case 'Y':
+                pk.numcmp_accept = 1;
+                break;
+            case 'n':
+            case 'N':
+                pk.numcmp_accept = 0;
+                break;
+
+            default:
+                console_printf("invalid 'yesno' parameter\n");
+                return EINVAL;
+            }
+            break;
+
+       default:
+         console_printf("invalid passkey action action=%d\n", pk.action);
+         return EINVAL;
+    }
+
+    rc = ble_sm_inject_io(conn_handle, &pk);
+    if (rc != 0) {
+        console_printf("error providing passkey; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param auth_passkey_params[] = {
+    {"conn", "auth_passkeyion handle, usage: =<UINT16>"},
+    {"action", "usage: =<UINT16>"},
+    {"key", "usage: =[0-999999]"},
+    {"oob", "usage: =[XX:XX...], len=16 octets"},
+    {"yesno", "usage: =[string]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help auth_passkey_help = {
+    .summary = "auth_passkey",
+    .usage = "auth_passkey usage",
+    .params = auth_passkey_params,
+};
+
 /*****************************************************************************
  * $security-pair                                                            *
  *****************************************************************************/
@@ -1915,6 +1814,108 @@ static const struct shell_cmd_help security_encryption_help = {
     .usage = "security_encryption usage",
     .params = security_encryption_params,
 };
+
+/*****************************************************************************
+ * $security-set-data                                                        *
+ *****************************************************************************/
+
+static int
+cmd_security_set_data(int argc, char **argv)
+{
+    uint8_t tmp;
+    int good;
+    int rc;
+
+    good = 0;
+
+    tmp = parse_arg_bool("oob_flag", &rc);
+    if (rc == 0) {
+        ble_hs_cfg.sm_oob_data_flag = tmp;
+        good++;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'oob_flag' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("mitm_flag", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_mitm = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'mitm_flag' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("io_capabilities", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_io_cap = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'io_capabilities' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("our_key_dist", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_our_key_dist = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'our_key_dist' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_uint8("their_key_dist", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_their_key_dist = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'their_key_dist' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("bonding", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_bonding = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'bonding' parameter\n");
+        return rc;
+    }
+
+    tmp = parse_arg_bool("sc", &rc);
+    if (rc == 0) {
+        good++;
+        ble_hs_cfg.sm_sc = tmp;
+    } else if (rc != ENOENT) {
+        console_printf("invalid 'sc' parameter\n");
+        return rc;
+    }
+
+    if (!good) {
+        console_printf("Error: no valid settings specified\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static const struct shell_param security_set_data_params[] = {
+    {"oob_flag", "usage: =[0-1]"},
+    {"mitm_flag", "usage: =[0-1]"},
+    {"io_capabilities", "usage: =[UINT8]"},
+    {"our_key_dist", "usage: =[UINT8]"},
+    {"their_key_dist", "usage: =[UINT8]"},
+    {"bonding", "usage: =[0-1]"},
+    {"sc", "usage: =[0-1]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help security_set_data_help = {
+    .summary = "security_set_data",
+    .usage = "security_set_data usage",
+    .params = security_set_data_params,
+};
+#endif
 
 /*****************************************************************************
  * $test-tx                                                                  *
@@ -2296,15 +2297,6 @@ static const struct shell_cmd btshell_commands[] = {
 #endif
     },
     {
-        .cmd_name = "set-sm-data",
-        .cb = cmd_set_sm_data,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-        .help = &set_sm_data_help,
-#else
-        .help = NULL,
-#endif
-    },
-    {
         .cmd_name = "white-list",
         .cb = cmd_white_list,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
@@ -2336,15 +2328,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_conn_datalen,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &conn_datalen_help,
-#else
-        .help = NULL,
-#endif
-    },
-    {
-        .cmd_name = "auth-passkey",
-        .cb = cmd_auth_passkey,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-        .help = &auth_passkey_help,
 #else
         .help = NULL,
 #endif
@@ -2538,6 +2521,16 @@ static const struct shell_cmd btshell_commands[] = {
         .help = NULL,
 #endif
     },
+#if NIMBLE_BLE_SM
+    {
+        .cmd_name = "auth-passkey",
+        .cb = cmd_auth_passkey,
+#if MYNEWT_VAL(SHELL_CMD_HELP)
+        .help = &auth_passkey_help,
+#else
+        .help = NULL,
+#endif
+    },
     {
         .cmd_name = "security-pair",
         .cb = cmd_security_pair,
@@ -2565,6 +2558,16 @@ static const struct shell_cmd btshell_commands[] = {
         .help = NULL,
 #endif
     },
+    {
+        .cmd_name = "security-set-data",
+        .cb = cmd_security_set_data,
+#if MYNEWT_VAL(SHELL_CMD_HELP)
+        .help = &set_sm_data_help,
+#else
+        .help = NULL,
+#endif
+    },
+#endif
     {
         .cmd_name = "test-tx",
         .cb = cmd_test_tx,
