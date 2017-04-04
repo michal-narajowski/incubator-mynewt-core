@@ -42,4 +42,4 @@ syscfg.defs:
         value: 1
     SHELL_PROMPT_MODULE:
         description: 'Include shell prompt module'
-        value: 1
+        value: 0
