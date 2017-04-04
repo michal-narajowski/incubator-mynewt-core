@@ -1760,6 +1760,161 @@ static const struct shell_cmd_help keystore_show_help = {
 };
 
 /*****************************************************************************
+ * $security-pair                                                            *
+ *****************************************************************************/
+
+static int
+cmd_security_pair(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_sec_pair(conn_handle);
+    if (rc != 0) {
+        console_printf("error initiating pairing; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param security_pair_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help security_pair_help = {
+    .summary = "security_pair",
+    .usage = "security_pair usage",
+    .params = security_pair_params,
+};
+
+/*****************************************************************************
+ * $security-start                                                           *
+ *****************************************************************************/
+
+static int
+cmd_security_start(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_sec_start(conn_handle);
+    if (rc != 0) {
+        console_printf("error starting security; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param security_start_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help security_start_help = {
+    .summary = "security_start",
+    .usage = "security_start usage",
+    .params = security_start_params,
+};
+
+/*****************************************************************************
+ * $security-encryption                                                      *
+ *****************************************************************************/
+
+static int
+cmd_security_encryption(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    uint16_t ediv;
+    uint64_t rand_val;
+    uint8_t ltk[16];
+    int rc;
+    int auth;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    ediv = parse_arg_uint16("ediv", &rc);
+    if (rc == ENOENT) {
+        rc = bletiny_sec_restart(conn_handle, NULL, 0, 0, 0);
+    } else {
+        rand_val = parse_arg_uint64("rand", &rc);
+        if (rc != 0) {
+            console_printf("invalid 'rand' parameter\n");
+            return rc;
+        }
+
+        auth = parse_arg_bool("auth", &rc);
+        if (rc != 0) {
+            console_printf("invalid 'auth' parameter\n");
+            return rc;
+        }
+
+        rc = parse_arg_byte_stream_exact_length("ltk", ltk, 16);
+        if (rc != 0) {
+            console_printf("invalid 'ltk' parameter\n");
+            return rc;
+        }
+
+        rc = bletiny_sec_restart(conn_handle, ltk, ediv, rand_val, auth);
+    }
+
+    if (rc != 0) {
+        console_printf("error initiating encryption; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param security_encryption_params[] = {
+    {"conn", "connection handle, usage: =<UINT16>"},
+    {"ediv", "usage: =[UINT16]"},
+    {"rand", "usage: =[UINT64]"},
+    {"auth", "usage: =[0-1]"},
+    {"ltk", "usage: =[XX:XX...], len=16 octets"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help security_encryption_help = {
+    .summary = "security_encryption",
+    .usage = "security_encryption usage",
+    .params = security_encryption_params,
+};
+
+/*****************************************************************************
  * $test-tx                                                                  *
  *                                                                           *
  * Command to transmit 'num' packets of size 'len' at rate 'r' to
@@ -2248,6 +2403,21 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "keystore-show",
         .cb = cmd_keystore_show,
         .help = &keystore_show_help,
+    },
+    {
+        .cmd_name = "security-pair",
+        .cb = cmd_security_pair,
+        .help = &security_pair_help,
+    },
+    {
+        .cmd_name = "security-start",
+        .cb = cmd_security_start,
+        .help = &security_start_help,
+    },
+    {
+        .cmd_name = "security-encryption",
+        .cb = cmd_security_encryption,
+        .help = &security_encryption_help,
     },
     {
         .cmd_name = "test-tx",
