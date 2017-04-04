@@ -1352,6 +1352,109 @@ static const struct shell_cmd_help conn_datalen_help = {
     .params = conn_datalen_params,
 };
 
+/*****************************************************************************
+ * $auth-passkey                                                             *
+ *****************************************************************************/
+
+static int
+cmd_auth_passkey(int argc, char **argv)
+{
+#if !NIMBLE_BLE_SM
+    return BLE_HS_ENOTSUP;
+#endif
+
+    uint16_t conn_handle;
+    struct ble_sm_io pk;
+    char *yesno;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    pk.action = parse_arg_uint16("action", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'action' parameter\n");
+        return rc;
+    }
+
+    switch (pk.action) {
+        case BLE_SM_IOACT_INPUT:
+        case BLE_SM_IOACT_DISP:
+           /* passkey is 6 digit number */
+           pk.passkey = parse_arg_long_bounds("key", 0, 999999, &rc);
+           if (rc != 0) {
+               console_printf("invalid 'key' parameter\n");
+               return rc;
+           }
+           break;
+
+        case BLE_SM_IOACT_OOB:
+            rc = parse_arg_byte_stream_exact_length("oob", pk.oob, 16);
+            if (rc != 0) {
+                console_printf("invalid 'oob' parameter\n");
+                return rc;
+            }
+            break;
+
+        case BLE_SM_IOACT_NUMCMP:
+            yesno = parse_arg_extract("yesno");
+            if (yesno == NULL) {
+                console_printf("invalid 'yesno' parameter\n");
+                return EINVAL;
+            }
+
+            switch (yesno[0]) {
+            case 'y':
+            case 'Y':
+                pk.numcmp_accept = 1;
+                break;
+            case 'n':
+            case 'N':
+                pk.numcmp_accept = 0;
+                break;
+
+            default:
+                console_printf("invalid 'yesno' parameter\n");
+                return EINVAL;
+            }
+            break;
+
+       default:
+         console_printf("invalid passkey action action=%d\n", pk.action);
+         return EINVAL;
+    }
+
+    rc = ble_sm_inject_io(conn_handle, &pk);
+    if (rc != 0) {
+        console_printf("error providing passkey; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param auth_passkey_params[] = {
+    {"conn", "auth_passkeyion handle, usage: =<UINT16>"},
+    {"action", "usage: =<UINT16>"},
+    {"key", "usage: =[0-999999]"},
+    {"oob", "usage: =[XX:XX...], len=16 octets"},
+    {"yesno", "usage: =[string]"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help auth_passkey_help = {
+    .summary = "auth_passkey",
+    .usage = "auth_passkey usage",
+    .params = auth_passkey_params,
+};
 
 /*****************************************************************************
  * keystore                                                                  *
@@ -2035,6 +2138,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "conn-datalen",
         .cb = cmd_conn_datalen,
         .help = &conn_datalen_help,
+    },
+    {
+        .cmd_name = "auth-passkey",
+        .cb = cmd_auth_passkey,
+        .help = &auth_passkey_help,
     },
     {
         .cmd_name = "gatt-discover-characteristic",
