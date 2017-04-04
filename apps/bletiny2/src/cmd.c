@@ -2458,6 +2458,7 @@ static const struct shell_cmd btshell_commands[] = {
         .help = NULL,
 #endif
     },
+#if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
     {
         .cmd_name = "l2cap-update",
         .cb = cmd_l2cap_update,
@@ -2494,6 +2495,7 @@ static const struct shell_cmd btshell_commands[] = {
         .help = NULL,
 #endif
     },
+#endif
     {
         .cmd_name = "keystore-add",
         .cb = cmd_keystore_add,
