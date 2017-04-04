@@ -33,7 +33,6 @@
 #define ARGC_MAX                10
 #define MODULE_NAME_MAX_LEN     20
 #define COMMAND_MAX_LEN         50
-#define SHELL_MAX_INPUT_LEN     80
 
 /* additional chars are "> " (include '\0' )*/
 #define PROMPT_SUFFIX 3
