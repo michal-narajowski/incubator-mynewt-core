@@ -1296,6 +1296,64 @@ static const struct shell_cmd_help conn_update_params_help = {
 };
 
 /*****************************************************************************
+ * $conn-datalen                                                             *
+ *****************************************************************************/
+
+static int
+cmd_conn_datalen(int argc, char **argv)
+{
+    uint16_t conn_handle;
+    uint16_t tx_octets;
+    uint16_t tx_time;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    conn_handle = parse_arg_uint16("conn", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'conn' parameter\n");
+        return rc;
+    }
+
+    tx_octets = parse_arg_long("octets", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'octets' parameter\n");
+        return rc;
+    }
+
+    tx_time = parse_arg_long("time", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'time' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_datalen(conn_handle, tx_octets, tx_time);
+    if (rc != 0) {
+        console_printf("error setting data length; rc=%d\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+static const struct shell_param conn_datalen_params[] = {
+    {"conn", "conn_datalenion handle, usage: =<UINT16>"},
+    {"octets", "usage: =<UINT16>"},
+    {"time", "usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help conn_datalen_help = {
+    .summary = "conn_datalen",
+    .usage = "conn_datalen usage",
+    .params = conn_datalen_params,
+};
+
+
+/*****************************************************************************
  * keystore                                                                  *
  *****************************************************************************/
 
@@ -1972,6 +2030,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "conn-update-params",
         .cb = cmd_conn_update_params,
         .help = &conn_update_params_help,
+    },
+    {
+        .cmd_name = "conn-datalen",
+        .cb = cmd_conn_datalen,
+        .help = &conn_datalen_help,
     },
     {
         .cmd_name = "gatt-discover-characteristic",
