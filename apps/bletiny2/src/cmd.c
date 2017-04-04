@@ -2247,8 +2247,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_advertise,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &advertise_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2256,8 +2254,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_connect,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &connect_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2265,8 +2261,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_disconnect,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &disconnect_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2274,8 +2268,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_scan,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &scan_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2283,8 +2275,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_set,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &set_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2292,8 +2282,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_set_adv_data,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &set_adv_data_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2301,8 +2289,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_white_list,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &white_list_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2310,8 +2296,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_conn_rssi,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &conn_rssi_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2319,8 +2303,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_conn_update_params,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &conn_update_params_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2328,8 +2310,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_conn_datalen,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &conn_datalen_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2337,8 +2317,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_discover_characteristic,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_discover_characteristic_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2346,8 +2324,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_discover_descriptor,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_discover_descriptor_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2355,8 +2331,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_discover_service,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_discover_service_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2364,8 +2338,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_discover_full,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_discover_full_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2373,8 +2345,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_find_included_services,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_find_included_services_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2382,8 +2352,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_exchange_mtu,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_exchange_mtu_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2391,8 +2359,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_read,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_read_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2400,8 +2366,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_notify,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_notify_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2409,8 +2373,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_service_changed,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_service_changed_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2418,8 +2380,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_show,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_show_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2427,8 +2387,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_show_addr,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_show_addr_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2436,8 +2394,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_show_conn,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_show_conn_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2445,8 +2401,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_show_coc,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_show_coc_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2454,8 +2408,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_write,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_write_help,
-#else
-        .help = NULL,
 #endif
     },
 #if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
@@ -2464,8 +2416,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_l2cap_update,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &l2cap_update_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2473,8 +2423,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_l2cap_create_server,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &l2cap_create_server_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2482,8 +2430,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_l2cap_connect,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &l2cap_connect_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2491,8 +2437,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_l2cap_disconnect,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &l2cap_disconnect_help,
-#else
-        .help = NULL,
 #endif
     },
 #endif
@@ -2501,8 +2445,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_keystore_add,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &keystore_add_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2510,8 +2452,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_keystore_del,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &keystore_del_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2519,8 +2459,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_keystore_show,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &keystore_show_help,
-#else
-        .help = NULL,
 #endif
     },
 #if NIMBLE_BLE_SM
@@ -2529,8 +2467,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_auth_passkey,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &auth_passkey_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2538,8 +2474,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_security_pair,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &security_pair_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2547,8 +2481,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_security_start,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &security_start_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2556,8 +2488,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_security_encryption,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &security_encryption_help,
-#else
-        .help = NULL,
 #endif
     },
     {
@@ -2565,8 +2495,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_security_set_data,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &set_sm_data_help,
-#else
-        .help = NULL,
 #endif
     },
 #endif
@@ -2575,8 +2503,6 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_test_tx,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &test_tx_help,
-#else
-        .help = NULL,
 #endif
     },
     { NULL, NULL, NULL },
