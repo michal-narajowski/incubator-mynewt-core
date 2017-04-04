@@ -1296,6 +1296,309 @@ static const struct shell_cmd_help conn_update_params_help = {
 };
 
 /*****************************************************************************
+ * keystore                                                                  *
+ *****************************************************************************/
+
+static struct kv_pair cmd_keystore_entry_type[] = {
+    { "msec",       BLE_STORE_OBJ_TYPE_PEER_SEC },
+    { "ssec",       BLE_STORE_OBJ_TYPE_OUR_SEC },
+    { "cccd",       BLE_STORE_OBJ_TYPE_CCCD },
+    { NULL }
+};
+
+static int
+cmd_keystore_parse_keydata(int argc, char **argv, union ble_store_key *out,
+                           int *obj_type)
+{
+    int rc;
+
+    memset(out, 0, sizeof(*out));
+    *obj_type = parse_arg_kv("type", cmd_keystore_entry_type, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'type' parameter\n");
+        return rc;
+    }
+
+    switch (*obj_type) {
+    case BLE_STORE_OBJ_TYPE_PEER_SEC:
+    case BLE_STORE_OBJ_TYPE_OUR_SEC:
+        out->sec.peer_addr.type = parse_arg_kv("addr_type", cmd_addr_type, &rc);
+        if (rc != 0) {
+            console_printf("invalid 'addr_type' parameter\n");
+            return rc;
+        }
+
+        rc = parse_arg_mac("addr", out->sec.peer_addr.val);
+        if (rc != 0) {
+            console_printf("invalid 'addr' parameter\n");
+            return rc;
+        }
+
+        out->sec.ediv = parse_arg_uint16("ediv", &rc);
+        if (rc != 0) {
+            console_printf("invalid 'ediv' parameter\n");
+            return rc;
+        }
+
+        out->sec.rand_num = parse_arg_uint64("rand", &rc);
+        if (rc != 0) {
+            console_printf("invalid 'rand' parameter\n");
+            return rc;
+        }
+        return 0;
+
+    default:
+        return EINVAL;
+    }
+}
+
+static int
+cmd_keystore_parse_valuedata(int argc, char **argv,
+                             int obj_type,
+                             union ble_store_key *key,
+                             union ble_store_value *out)
+{
+    int rc;
+    int valcnt = 0;
+    memset(out, 0, sizeof(*out));
+
+    switch (obj_type) {
+        case BLE_STORE_OBJ_TYPE_PEER_SEC:
+        case BLE_STORE_OBJ_TYPE_OUR_SEC:
+            rc = parse_arg_byte_stream_exact_length("ltk", out->sec.ltk, 16);
+            if (rc == 0) {
+                out->sec.ltk_present = 1;
+                swap_in_place(out->sec.ltk, 16);
+                valcnt++;
+            } else if (rc != ENOENT) {
+                console_printf("invalid 'ltk' parameter\n");
+                return rc;
+            }
+            rc = parse_arg_byte_stream_exact_length("irk", out->sec.irk, 16);
+            if (rc == 0) {
+                out->sec.irk_present = 1;
+                swap_in_place(out->sec.irk, 16);
+                valcnt++;
+            } else if (rc != ENOENT) {
+                console_printf("invalid 'irk' parameter\n");
+                return rc;
+            }
+            rc = parse_arg_byte_stream_exact_length("csrk", out->sec.csrk, 16);
+            if (rc == 0) {
+                out->sec.csrk_present = 1;
+                swap_in_place(out->sec.csrk, 16);
+                valcnt++;
+            } else if (rc != ENOENT) {
+                console_printf("invalid 'csrk' parameter\n");
+                return rc;
+            }
+            out->sec.peer_addr = key->sec.peer_addr;
+            out->sec.ediv = key->sec.ediv;
+            out->sec.rand_num = key->sec.rand_num;
+            break;
+    }
+
+    if (valcnt) {
+        return 0;
+    }
+    return -1;
+}
+
+/*****************************************************************************
+ * keystore-add                                                              *
+ *****************************************************************************/
+
+static int
+cmd_keystore_add(int argc, char **argv)
+{
+    union ble_store_key key;
+    union ble_store_value value;
+    int obj_type;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = cmd_keystore_parse_keydata(argc, argv, &key, &obj_type);
+
+    if (rc) {
+        return rc;
+    }
+
+    rc = cmd_keystore_parse_valuedata(argc, argv, obj_type, &key, &value);
+
+    if (rc) {
+        return rc;
+    }
+
+    switch(obj_type) {
+        case BLE_STORE_OBJ_TYPE_PEER_SEC:
+            rc = ble_store_write_peer_sec(&value.sec);
+            break;
+        case BLE_STORE_OBJ_TYPE_OUR_SEC:
+            rc = ble_store_write_our_sec(&value.sec);
+            break;
+        case BLE_STORE_OBJ_TYPE_CCCD:
+            rc = ble_store_write_cccd(&value.cccd);
+            break;
+        default:
+            rc = ble_store_write(obj_type, &value);
+    }
+    return rc;
+}
+
+static const struct shell_param parse_keydata[] = {
+    {"type", "entry type, usage: =<msec|ssec|cccd>"},
+    {"addr_type", "usage: =<public|random>"},
+    {"addr", "usage: =<XX:XX:XX:XX:XX:XX>"},
+    {"ediv", "usage: =<UINT16>"},
+    {"rand", "usage: =<UINT64>"},
+    {NULL, NULL}
+};
+
+static const struct shell_param parse_valuedata[] = {
+    {"ltk", "usage: =<XX:XX:...>, len=16 octets"},
+    {"irk", "usage: =<XX:XX:...>, len=16 octets"},
+    {"csrk", "usage: =<XX:XX:...>, len=16 octets"},
+    {NULL, NULL}
+};
+
+
+static const struct shell_param keystore_add_params[] = {
+    {"type", "entry type, usage: =<msec|ssec|cccd>"},
+    {"addr_type", "usage: =<public|random>"},
+    {"addr", "usage: =<XX:XX:XX:XX:XX:XX>"},
+    {"ediv", "usage: =<UINT16>"},
+    {"rand", "usage: =<UINT64>"},
+    {"ltk", "usage: =<XX:XX:...>, len=16 octets"},
+    {"irk", "usage: =<XX:XX:...>, len=16 octets"},
+    {"csrk", "usage: =<XX:XX:...>, len=16 octets"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help keystore_add_help = {
+    .summary = "keystore_add",
+    .usage = "keystore_add usage",
+    .params = keystore_add_params,
+};
+
+/*****************************************************************************
+ * keystore-del                                                              *
+ *****************************************************************************/
+
+static int
+cmd_keystore_del(int argc, char **argv)
+{
+    union ble_store_key key;
+    int obj_type;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = cmd_keystore_parse_keydata(argc, argv, &key, &obj_type);
+
+    if (rc) {
+        return rc;
+    }
+    rc = ble_store_delete(obj_type, &key);
+    return rc;
+}
+
+static const struct shell_param keystore_del_params[] = {
+    {"type", "entry type, usage: =<msec|ssec|cccd>"},
+    {"addr_type", "usage: =<public|random>"},
+    {"addr", "usage: =<XX:XX:XX:XX:XX:XX>"},
+    {"ediv", "usage: =<UINT16>"},
+    {"rand", "usage: =<UINT64>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help keystore_del_help = {
+    .summary = "keystore_del",
+    .usage = "keystore_del usage",
+    .params = keystore_del_params,
+};
+
+/*****************************************************************************
+ * keystore-show                                                             *
+ *****************************************************************************/
+
+static int
+cmd_keystore_iterator(int obj_type,
+                      union ble_store_value *val,
+                      void *cookie) {
+
+    switch (obj_type) {
+        case BLE_STORE_OBJ_TYPE_PEER_SEC:
+        case BLE_STORE_OBJ_TYPE_OUR_SEC:
+            console_printf("Key: ");
+            if (ble_addr_cmp(&val->sec.peer_addr, BLE_ADDR_ANY) == 0) {
+                console_printf("ediv=%u ", val->sec.ediv);
+                console_printf("ediv=%llu ", val->sec.rand_num);
+            } else {
+                console_printf("addr_type=%u ", val->sec.peer_addr.type);
+                print_addr(val->sec.peer_addr.val);
+            }
+            console_printf("\n");
+
+            if (val->sec.ltk_present) {
+                console_printf("    LTK: ");
+                print_bytes(val->sec.ltk, 16);
+                console_printf("\n");
+            }
+            if (val->sec.irk_present) {
+                console_printf("    IRK: ");
+                print_bytes(val->sec.irk, 16);
+                console_printf("\n");
+            }
+            if (val->sec.csrk_present) {
+                console_printf("    CSRK: ");
+                print_bytes(val->sec.csrk, 16);
+                console_printf("\n");
+            }
+            break;
+    }
+    return 0;
+}
+
+static int
+cmd_keystore_show(int argc, char **argv)
+{
+    int type;
+    int rc;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    type = parse_arg_kv("type", cmd_keystore_entry_type, &rc);
+    if (rc != 0) {
+        console_printf("invalid 'type' parameter\n");
+        return rc;
+    }
+
+    ble_store_iterate(type, &cmd_keystore_iterator, NULL);
+    return 0;
+}
+
+static const struct shell_param keystore_show_params[] = {
+    {"type", "entry type, usage: =<msec|ssec|cccd>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help keystore_show_help = {
+    .summary = "keystore_show",
+    .usage = "keystore_show usage",
+    .params = keystore_show_params,
+};
+
+/*****************************************************************************
  * $test-tx                                                                  *
  *                                                                           *
  * Command to transmit 'num' packets of size 'len' at rate 'r' to
@@ -1759,6 +2062,21 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "l2cap-disconnect",
         .cb = cmd_l2cap_disconnect,
         .help = &l2cap_disconnect_help,
+    },
+    {
+        .cmd_name = "keystore-add",
+        .cb = cmd_keystore_add,
+        .help = &keystore_add_help,
+    },
+    {
+        .cmd_name = "keystore-del",
+        .cb = cmd_keystore_del,
+        .help = &keystore_del_help,
+    },
+    {
+        .cmd_name = "keystore-show",
+        .cb = cmd_keystore_show,
+        .help = &keystore_show_help,
     },
     {
         .cmd_name = "test-tx",
