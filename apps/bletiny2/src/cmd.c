@@ -873,6 +873,73 @@ static const struct shell_cmd_help conn_update_params_help = {
 };
 
 /*****************************************************************************
+ * $test-tx                                                                  *
+ *                                                                           *
+ * Command to transmit 'num' packets of size 'len' at rate 'r' to
+ * handle 'h' Note that length must be <= 251. The rate is in msecs.
+ *
+ *****************************************************************************/
+
+static int
+cmd_test_tx(int argc, char **argv)
+{
+    int rc;
+    uint16_t rate;
+    uint16_t len;
+    uint16_t handle;
+    uint16_t num;
+
+    rc = parse_arg_all(argc - 1, argv + 1);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rate = parse_arg_uint16("rate", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'rate' parameter\n");
+        return rc;
+    }
+
+    len = parse_arg_uint16("length", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'length' parameter\n");
+        return rc;
+    }
+    if ((len > 251) || (len < 4)) {
+        console_printf("error: len must be between 4 and 251, inclusive");
+    }
+
+    num = parse_arg_uint16("num", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'num' parameter\n");
+        return rc;
+    }
+
+    handle = parse_arg_uint16("handle", &rc);
+    if (rc != 0) {
+        console_printf("invalid 'handle' parameter\n");
+        return rc;
+    }
+
+    rc = bletiny_tx_start(handle, len, rate, num);
+    return rc;
+}
+
+static const struct shell_param test_tx_params[] = {
+    {"num", "number of packets, usage: =<UINT16>"},
+    {"length", "size of packet, usage: =<UINT16>"},
+    {"rate", "rate of tx, usage: =<UINT16>"},
+    {"handle", "handle to tx to, usage: =<UINT16>"},
+    {NULL, NULL}
+};
+
+static const struct shell_cmd_help test_tx_help = {
+    .summary = "test_tx",
+    .usage = "test_tx usage",
+    .params = test_tx_params,
+};
+
+/*****************************************************************************
  * $gatt-discover                                                            *
  *****************************************************************************/
 
@@ -1259,6 +1326,11 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "l2cap-disconnect",
         .cb = cmd_l2cap_disconnect,
         .help = &l2cap_disconnect_help,
+    },
+    {
+        .cmd_name = "test-tx",
+        .cb = cmd_test_tx,
+        .help = &test_tx_help,
     },
     { NULL, NULL, NULL },
 };
