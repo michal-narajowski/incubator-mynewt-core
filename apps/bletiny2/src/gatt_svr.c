@@ -23,6 +23,7 @@
 #include "console/console.h"
 #include "host/ble_hs.h"
 #include "host/ble_uuid.h"
+#include "host/ble_gatt.h"
 #include "bletiny.h"
 
 /* 0000xxxx-8c26-476f-89a7-a108033a69c7 */
@@ -576,6 +577,12 @@ gatt_svr_register(void)
 
     rc = ble_gatts_register_svcs(gatt_svr_svcs, gatt_svr_register_cb, NULL);
     return rc;
+}
+
+void
+gatt_svr_print_svcs(void)
+{
+    ble_gatts_show_local();
 }
 
 int

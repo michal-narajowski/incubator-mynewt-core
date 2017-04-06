@@ -2119,6 +2119,12 @@ static const struct shell_cmd_help gatt_show_help = {
     .params = gatt_show_params,
 };
 
+static const struct shell_cmd_help gatt_show_local_help = {
+    .summary = "gatt_show_local",
+    .usage = "gatt_show local usage",
+    .params = gatt_show_params,
+};
+
 static const struct shell_cmd_help gatt_show_addr_help = {
     .summary = "gatt_show_addr",
     .usage = "gatt_show addr usage",
@@ -2365,6 +2371,13 @@ static const struct shell_cmd btshell_commands[] = {
         .cb = cmd_gatt_show,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
         .help = &gatt_show_help,
+#endif
+    },
+    {
+        .cmd_name = "gatt-show-local",
+        .cb = cmd_gatt_show_local,
+#if MYNEWT_VAL(SHELL_CMD_HELP)
+        .help = &gatt_show_local_help,
 #endif
     },
     {

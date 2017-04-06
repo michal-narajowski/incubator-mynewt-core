@@ -165,6 +165,7 @@ int bletiny_l2cap_disconnect(uint16_t conn, uint16_t idx);
 
 void gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg);
 int gatt_svr_init(void);
+void gatt_svr_print_svcs(void);
 
 /** Misc. */
 void print_bytes(const uint8_t *bytes, int len);

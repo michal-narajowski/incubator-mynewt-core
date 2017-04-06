@@ -423,6 +423,13 @@ cmd_gatt_show(int argc, char **argv)
 }
 
 int
+cmd_gatt_show_local(int argc, char **argv)
+{
+    gatt_svr_print_svcs();
+    return 0;
+}
+
+int
 cmd_gatt_show_addr(int argc, char **argv)
 {
     uint8_t id_addr[6];
