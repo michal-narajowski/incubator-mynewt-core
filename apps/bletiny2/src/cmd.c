@@ -2494,7 +2494,7 @@ static const struct shell_cmd btshell_commands[] = {
         .cmd_name = "security-set-data",
         .cb = cmd_security_set_data,
 #if MYNEWT_VAL(SHELL_CMD_HELP)
-        .help = &set_sm_data_help,
+        .help = &security_set_data_help,
 #endif
     },
 #endif
