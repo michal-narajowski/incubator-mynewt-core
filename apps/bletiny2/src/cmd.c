@@ -1406,23 +1406,6 @@ cmd_keystore_add(int argc, char **argv)
     return rc;
 }
 
-static const struct shell_param parse_keydata[] = {
-    {"type", "entry type, usage: =<msec|ssec|cccd>"},
-    {"addr_type", "usage: =<public|random>"},
-    {"addr", "usage: =<XX:XX:XX:XX:XX:XX>"},
-    {"ediv", "usage: =<UINT16>"},
-    {"rand", "usage: =<UINT64>"},
-    {NULL, NULL}
-};
-
-static const struct shell_param parse_valuedata[] = {
-    {"ltk", "usage: =<XX:XX:...>, len=16 octets"},
-    {"irk", "usage: =<XX:XX:...>, len=16 octets"},
-    {"csrk", "usage: =<XX:XX:...>, len=16 octets"},
-    {NULL, NULL}
-};
-
-
 static const struct shell_param keystore_add_params[] = {
     {"type", "entry type, usage: =<msec|ssec|cccd>"},
     {"addr_type", "usage: =<public|random>"},
@@ -2174,6 +2157,7 @@ static const struct shell_cmd_help gatt_write_help = {
     .params = gatt_write_params,
 };
 
+#if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
 /*****************************************************************************
  * $l2cap-update                                                             *
  *****************************************************************************/
@@ -2240,6 +2224,7 @@ static const struct shell_cmd_help l2cap_disconnect_help = {
     .params = l2cap_disconnect_params,
 };
 
+#endif
 
 static const struct shell_cmd btshell_commands[] = {
     {
