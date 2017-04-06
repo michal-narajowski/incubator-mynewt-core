@@ -456,6 +456,7 @@ int ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
                        uint16_t *out_def_handle, uint16_t *out_val_handle);
 int ble_gatts_find_dsc(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
                        const ble_uuid_t *dsc_uuid, uint16_t *out_dsc_handle);
+void ble_gatts_show_local(void);
 
 #ifdef __cplusplus
 }
