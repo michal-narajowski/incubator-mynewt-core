@@ -6,21 +6,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
-#include <zephyr/types.h>
-#include <misc/byteorder.h>
-#include <misc/util.h>
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/mesh.h>
 
-#define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_MESH_DEBUG_MODEL)
-#include "common/log.h"
+#define BT_DBG_ENABLED (MYNEWT_VAL(BLE_MESH_DEBUG_MODEL))
+#include "host/ble_hs_log.h"
 
 #include "mesh.h"
+#include "mesh_priv.h"
 #include "adv.h"
 #include "net.h"
 #include "transport.h"
@@ -86,7 +81,7 @@ static size_t health_get_current(struct bt_mesh_model *mod,
 
 	bt_mesh_model_msg_init(msg, OP_HEALTH_CURRENT_STATUS);
 
-	test_id = net_buf_simple_add(msg, sizeof(test_id));
+	test_id = net_buf_simple_add(msg, 1);
 	company_ptr = net_buf_simple_add(msg, sizeof(company_id));
 
 	fault_count = net_buf_simple_tailroom(msg) - 4;
@@ -326,7 +321,7 @@ static void health_period_set(struct bt_mesh_model *model,
 	send_health_period_status(model, ctx);
 }
 
-const struct bt_mesh_model_op const bt_mesh_health_op[] = {
+const struct bt_mesh_model_op bt_mesh_health_op[] = {
 	{ OP_HEALTH_FAULT_GET,         2,   health_fault_get },
 	{ OP_HEALTH_FAULT_CLEAR,       2,   health_fault_clear },
 	{ OP_HEALTH_FAULT_CLEAR_UNREL, 2,   health_fault_clear_unrel },
@@ -380,10 +375,9 @@ int bt_mesh_fault_update(struct bt_mesh_elem *elem)
 	return 0;
 }
 
-static void attention_off(struct k_work *work)
+static void attention_off(struct os_event *work)
 {
-	struct bt_mesh_health *srv = CONTAINER_OF(work, struct bt_mesh_health,
-						  attention.timer.work);
+	struct bt_mesh_health *srv = work->ev_arg;
 	BT_DBG("");
 
 	if (srv->attention.off) {

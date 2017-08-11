@@ -6,28 +6,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
 #include <errno.h>
-#include <misc/util.h>
+#include <assert.h>
+#include "os/os_mbuf.h"
+#include "mesh.h"
 
-#include <net/buf.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/conn.h>
-#include <bluetooth/mesh.h>
-
-#define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_MESH_DEBUG_BEACON)
-#include "common/log.h"
+#define BT_DBG_ENABLED (MYNEWT_VAL(BLE_MESH_DEBUG_BEACON))
+#include "host/ble_hs_log.h"
 
 #include "adv.h"
-#include "mesh.h"
+#include <mesh_priv.h>
 #include "net.h"
 #include "prov.h"
 #include "crypto.h"
 #include "beacon.h"
 #include "foundation.h"
 
-#define UNPROVISIONED_INTERVAL     K_SECONDS(5)
-#define PROVISIONED_INTERVAL       K_SECONDS(10)
+#define UNPROVISIONED_INTERVAL    (K_SECONDS(5))
+#define PROVISIONED_INTERVAL      (K_SECONDS(10))
 
 #define BEACON_TYPE_UNPROVISIONED  0x00
 #define BEACON_TYPE_SECURE         0x01
@@ -45,7 +41,7 @@ static struct k_delayed_work beacon_timer;
 static struct {
 	u16_t net_idx;
 	u8_t  data[21];
-} beacon_cache[CONFIG_BLUETOOTH_MESH_SUBNET_COUNT];
+} beacon_cache[MYNEWT_VAL(BLE_MESH_SUBNET_COUNT)];
 
 static struct bt_mesh_subnet *cache_check(u8_t data[21])
 {
@@ -153,7 +149,7 @@ static int secure_beacon_send(void)
 
 		BT_MESH_ADV(buf)->user_data[0] = i;
 
-		bt_mesh_beacon_create(sub, &buf->b);
+		bt_mesh_beacon_create(sub, buf);
 
 		bt_mesh_adv_send(buf, beacon_complete);
 		net_buf_unref(buf);
@@ -164,7 +160,7 @@ static int secure_beacon_send(void)
 
 static int unprovisioned_beacon_send(void)
 {
-#if defined(CONFIG_BLUETOOTH_MESH_PB_ADV)
+#if (MYNEWT_VAL(BLE_MESH_PB_ADV))
 	struct net_buf *buf;
 
 	BT_DBG("");
@@ -180,12 +176,12 @@ static int unprovisioned_beacon_send(void)
 	net_buf_add_mem(buf, bt_mesh_prov_get_uuid(), 16);
 
 	/* OOB Info (2 bytes) + URI Hash (4 bytes) */
-	memset(net_buf_add(buf, 2 + 4), 0, 2 + 4);
+	net_buf_add_zeros(buf, 2 + 4);
 
 	bt_mesh_adv_send(buf, NULL);
 	net_buf_unref(buf);
 
-#endif /* CONFIG_BLUETOOTH_MESH_PB_ADV */
+#endif /* MYNEWT_VAL(BLE_MESH_PB_ADV) */
 	return 0;
 }
 
@@ -215,10 +211,10 @@ static void update_beacon_observation(void)
 	}
 }
 
-static void beacon_send(struct k_work *work)
+static void beacon_send(struct os_event *work)
 {
 	/* Don't send anything if we have an active provisioning link */
-	if (IS_ENABLED(CONFIG_BLUETOOTH_MESH_PROV) && bt_prov_active()) {
+	if ((MYNEWT_VAL(BLE_MESH_PROV)) && bt_prov_active()) {
 		k_delayed_work_submit(&beacon_timer, UNPROVISIONED_INTERVAL);
 		return;
 	}
@@ -250,25 +246,25 @@ static void secure_beacon_recv(struct net_buf_simple *buf)
 	u8_t flags;
 	bool new_key;
 
-	if (buf->len < 21) {
-		BT_ERR("Too short secure beacon (len %u)", buf->len);
+	if (buf->om_len < 21) {
+		BT_ERR("Too short secure beacon (len %u)", buf->om_len);
 		return;
 	}
 
-	sub = cache_check(buf->data);
+	sub = cache_check(buf->om_data);
 	if (sub) {
 		/* We've seen this beacon before - just update the stats */
 		goto update_stats;
 	}
 
 	/* So we can add to the cache if auth matches */
-	data = buf->data;
+	data = buf->om_data;
 
 	flags = net_buf_simple_pull_u8(buf);
-	net_id = buf->data;
+	net_id = buf->om_data;
 	net_buf_simple_pull(buf, 8);
 	iv_index = net_buf_simple_pull_be32(buf);
-	auth = buf->data;
+	auth = buf->om_data;
 
 	BT_DBG("flags 0x%02x id %s iv_index 0x%08x",
 	       flags, bt_hex(net_id, 8), iv_index);
@@ -318,9 +314,9 @@ void bt_mesh_beacon_recv(struct net_buf_simple *buf)
 {
 	u8_t type;
 
-	BT_DBG("%u bytes: %s", buf->len, bt_hex(buf->data, buf->len));
+	BT_DBG("%u bytes: %s", buf->om_len, bt_hex(buf->om_data, buf->om_len));
 
-	if (buf->len < 1) {
+	if (buf->om_len < 1) {
 		BT_ERR("Too short beacon");
 		return;
 	}

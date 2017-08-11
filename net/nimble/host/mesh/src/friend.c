@@ -6,20 +6,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+#include "syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH_FRIEND) == 1
+
 #include <stdint.h>
-#include <zephyr.h>
-#include <misc/byteorder.h>
+#include <errno.h>
+#include <assert.h>
 
-#include <net/buf.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/mesh.h>
+#define BT_DBG_ENABLED (MYNEWT_VAL(BLE_MESH_DEBUG_FRIEND))
+#include "host/ble_hs_log.h"
 
-#define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_MESH_DEBUG_FRIEND)
-#include "common/log.h"
-
+#include "mesh.h"
+#include "mesh_priv.h"
 #include "crypto.h"
 #include "adv.h"
-#include "mesh.h"
 #include "net.h"
 #include "transport.h"
 #include "access.h"
@@ -53,10 +54,10 @@ static int send_friend_update(void)
 
 int bt_mesh_friend_poll(struct bt_mesh_net_rx *rx, struct net_buf_simple *buf)
 {
-	struct bt_mesh_ctl_friend_poll *msg = (void *)buf->data;
+	struct bt_mesh_ctl_friend_poll *msg = (void *)buf->om_data;
 	struct bt_mesh_friend *frnd = &bt_mesh.frnd;
 
-	if (buf->len < sizeof(*msg)) {
+	if (buf->om_len < sizeof(*msg)) {
 		BT_WARN("Too short Friend Update");
 		return -EINVAL;
 	}
@@ -89,8 +90,8 @@ static int send_friend_offer(s8_t rssi)
 		.src = bt_mesh_primary_addr(),
 	};
 	struct bt_mesh_ctl_friend_offer off = {
-		.recv_win = CONFIG_BLUETOOTH_MESH_FRIEND_RECV_WIN,
-		.queue_size = CONFIG_BLUETOOTH_MESH_FRIEND_QUEUE_SIZE,
+		.recv_win = MYNEWT_VAL(BLE_MESH_FRIEND_RECV_WIN),
+		.queue_size = MYNEWT_VAL(BLE_MESH_FRIEND_QUEUE_SIZE),
 		.rssi = rssi,
 		.frnd_counter = bt_mesh.frnd.counter++,
 	};
@@ -103,11 +104,11 @@ static int send_friend_offer(s8_t rssi)
 
 int bt_mesh_friend_req(struct bt_mesh_net_rx *rx, struct net_buf_simple *buf)
 {
-	struct bt_mesh_ctl_friend_req *msg = (void *)buf->data;
+	struct bt_mesh_ctl_friend_req *msg = (void *)buf->om_data;
 	struct bt_mesh_friend *frnd = &bt_mesh.frnd;
 	struct bt_mesh_subnet *sub = rx->sub;
 
-	if (buf->len < sizeof(*msg)) {
+	if (buf->om_len < sizeof(*msg)) {
 		BT_WARN("Too short Friend Request");
 		return -EINVAL;
 	}
@@ -134,7 +135,7 @@ int bt_mesh_friend_req(struct bt_mesh_net_rx *rx, struct net_buf_simple *buf)
 	return 0;
 }
 
-static void friend_timeout(struct k_work *work)
+static void friend_timeout(struct os_event *work)
 {
 	struct bt_mesh_friend *frnd = &bt_mesh.frnd;
 
@@ -210,3 +211,5 @@ bool bt_mesh_friend_enqueue(struct net_buf *buf, u16_t dst)
 
 	return true;
 }
+
+#endif //MYNEWT_VAL(BLE_MESH_FRIEND)

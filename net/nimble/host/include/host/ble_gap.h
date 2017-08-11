@@ -23,6 +23,8 @@
 #include <inttypes.h>
 #include "host/ble_hs.h"
 #include "host/ble_hs_adv.h"
+#include "syscfg/syscfg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -616,6 +618,9 @@ struct ble_gap_event {
 };
 
 typedef int ble_gap_event_fn(struct ble_gap_event *event, void *arg);
+#if MYNEWT_VAL(BLE_MESH_ENABLED)
+typedef int ble_gap_mesh_fn(struct ble_gap_event *event, void *arg);
+#endif
 
 #define BLE_GAP_CONN_MODE_NON               0
 #define BLE_GAP_CONN_MODE_DIR               1
@@ -698,6 +703,35 @@ int ble_gap_set_prefered_default_le_phy(uint8_t tx_phys_mask,
 #define BLE_GAP_LE_PHY_CODED_S8             2
 int ble_gap_set_prefered_le_phy(uint16_t conn_handle, uint8_t tx_phys_mask,
                                 uint8_t rx_phys_mask, uint16_t phy_opts);
+
+#if MYNEWT_VAL(BLE_MESH_ENABLED)
+struct bt_conn_cb {
+    /** @brief A new connection has been established.
+     *
+     *  This callback notifies the application of a new connection.
+     *  In case the err parameter is non-zero it means that the
+     *  connection establishment failed.
+     *
+     *  @param conn New connection object.
+     *  @param err HCI error. Zero for success, non-zero otherwise.
+     */
+    void (*connected)(void *conn, uint8_t err);
+
+    /** @brief A connection has been disconnected.
+     *
+     *  This callback notifies the application that a connection
+     *  has been disconnected.
+     *
+     *  @param conn Connection object.
+     *  @param reason HCI reason for the disconnection.
+     */
+    void (*disconnected)(void *conn, uint8_t reason);
+};
+void bt_conn_cb_register(struct bt_conn_cb *cb);
+
+int ble_gap_mesh_register(ble_gap_mesh_fn *mesh_cb, void *args);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -353,3 +353,8 @@ syscfg.defs:
             mechanism.
 
         value: 8
+
+    BLE_MESH_ENABLED:
+        description : >
+            TODO	
+        value: 1
