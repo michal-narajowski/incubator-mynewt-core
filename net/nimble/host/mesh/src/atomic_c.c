@@ -19,18 +19,20 @@
  */
 
 #include "atomic.h"
+#include "os/os_arch.h"
 
 static inline unsigned
 irq_lock(void)
 {
-    //TODO
-    return 0;
+    unsigned sr;
+    OS_ENTER_CRITICAL(sr);
+    return sr;
 }
 
 static inline void
 irq_unlock(unsigned int key)
 {
-    //TODO
+    OS_EXIT_CRITICAL(key);
 }
 
 /**

@@ -52,6 +52,76 @@
 typedef size_t ssize_t;
 #define bt_conn ble_hs_conn
 
+
+/* Advertising API */
+
+/** Description of different data types that can be encoded into
+  * advertising data. Used to form arrays that are passed to the
+  * bt_le_adv_start() function.
+  */
+struct bt_data {
+    u8_t type;
+    u8_t data_len;
+    const u8_t *data;
+};
+
+/** @brief Helper to declare elements of bt_data arrays
+ *
+ *  This macro is mainly for creating an array of struct bt_data
+ *  elements which is then passed to bt_le_adv_start().
+ *
+ *  @param _type Type of advertising data field
+ *  @param _data Pointer to the data field payload
+ *  @param _data_len Number of bytes behind the _data pointer
+ */
+#define BT_DATA(_type, _data, _data_len) \
+    { \
+        .type = (_type), \
+        .data_len = (_data_len), \
+        .data = (const u8_t *)(_data), \
+    }
+
+/** @brief Helper to declare elements of bt_data arrays
+ *
+ *  This macro is mainly for creating an array of struct bt_data
+ *  elements which is then passed to bt_le_adv_start().
+ *
+ *  @param _type Type of advertising data field
+ *  @param _bytes Variable number of single-byte parameters
+ */
+#define BT_DATA_BYTES(_type, _bytes...) \
+    BT_DATA(_type, ((u8_t []) { _bytes }), \
+        sizeof((u8_t []) { _bytes }))
+
+/* EIR/AD data type definitions */
+#define BT_DATA_FLAGS                   0x01 /* AD flags */
+#define BT_DATA_UUID16_SOME             0x02 /* 16-bit UUID, more available */
+#define BT_DATA_UUID16_ALL              0x03 /* 16-bit UUID, all listed */
+#define BT_DATA_UUID32_SOME             0x04 /* 32-bit UUID, more available */
+#define BT_DATA_UUID32_ALL              0x05 /* 32-bit UUID, all listed */
+#define BT_DATA_UUID128_SOME            0x06 /* 128-bit UUID, more available */
+#define BT_DATA_UUID128_ALL             0x07 /* 128-bit UUID, all listed */
+#define BT_DATA_NAME_SHORTENED          0x08 /* Shortened name */
+#define BT_DATA_NAME_COMPLETE           0x09 /* Complete name */
+#define BT_DATA_TX_POWER                0x0a /* Tx Power */
+#define BT_DATA_SOLICIT16               0x14 /* Solicit UUIDs, 16-bit */
+#define BT_DATA_SOLICIT128              0x15 /* Solicit UUIDs, 128-bit */
+#define BT_DATA_SVC_DATA16              0x16 /* Service data, 16-bit UUID */
+#define BT_DATA_GAP_APPEARANCE          0x19 /* GAP appearance */
+#define BT_DATA_SOLICIT32               0x1f /* Solicit UUIDs, 32-bit */
+#define BT_DATA_SVC_DATA32              0x20 /* Service data, 32-bit UUID */
+#define BT_DATA_SVC_DATA128             0x21 /* Service data, 128-bit UUID */
+#define BT_DATA_MESH_PROV               0x29 /* Mesh Provisioning PDU */
+#define BT_DATA_MESH_MESSAGE            0x2a /* Mesh Networking PDU */
+#define BT_DATA_MESH_BEACON             0x2b /* Mesh Beacon */
+
+#define BT_DATA_MANUFACTURER_DATA       0xff /* Manufacturer Specific Data */
+
+#define BT_LE_AD_LIMITED                0x01 /* Limited Discoverable */
+#define BT_LE_AD_GENERAL                0x02 /* General Discoverable */
+#define BT_LE_AD_NO_BREDR               0x04 /* BR/EDR not supported */
+
+
 #define sys_put_be16(a,b) put_be16(b, a)
 #define sys_put_le16(a,b) put_le16(b, a)
 #define sys_put_be32(a,b) put_be32(b, a)
@@ -91,6 +161,7 @@ typedef size_t ssize_t;
 #define BT_DBG(...) BLE_HS_LOG(DEBUG, __VA_ARGS__); BLE_HS_LOG(DEBUG,"\n")
 #define BT_INFO(...) BLE_HS_LOG(INFO, __VA_ARGS__); BLE_HS_LOG(INFO,"\n")
 #define BT_ERR(...) BLE_HS_LOG(ERROR, __VA_ARGS__); BLE_HS_LOG(ERROR,"\n")
+#define BT_GATT_ERR(_att_err)                  (-(_att_err))
 
 #define bt_addr_le_t ble_addr_t
 #define bt_le_adv_param ble_gap_adv_params
@@ -157,6 +228,9 @@ void net_buf_reserve(struct net_buf *buf, size_t reserve);
 int bt_encrypt_le(const uint8_t *key, const uint8_t *plaintext, uint8_t *enc_data);
 int bt_encrypt_be(const uint8_t *key, const uint8_t *plaintext, uint8_t *enc_data);
 #define bt_le_adv_stop ble_gap_adv_stop
+
+#define BT_GATT_CCC_NOTIFY BLE_GATT_CHR_PROP_NOTIFY
+#define bt_gatt_attr ble_gatt_attr
 uint16_t bt_gatt_get_mtu(struct ble_hs_conn *conn);
 
 struct bt_pub_key_cb {
@@ -178,10 +252,15 @@ int bt_pub_key_gen(struct bt_pub_key_cb *new_cb);
 uint8_t *bt_pub_key_get(void);
 int bt_rand(void *buf, size_t len);
 #define bt_conn_ref(conn) conn;
+static inline void
+bt_conn_unref(struct bt_conn *conn) {};
 
 struct k_delayed_work {
     struct os_callout work;
 };
+
+#define CONTAINER_OF(ptr, type, field) \
+    ((type *)(((char *)(ptr)) - offsetof(type, field)))
 
 #define k_work os_callout
 #define k_work_handler_t os_event_fn
@@ -193,6 +272,7 @@ void k_delayed_work_submit(struct k_delayed_work *w, uint32_t ms);
 int64_t k_uptime_get(void);
 u32_t k_uptime_get_32(void);
 void k_work_submit(struct k_work *w);
+void k_work_add_arg(struct k_work *w, void *arg);
 uint32_t k_delayed_work_remaining_get (struct k_delayed_work *w);
 
 static inline void net_buf_simple_save(struct net_buf_simple *buf,
@@ -236,5 +316,9 @@ static inline unsigned int find_msb_set(u32_t op)
     return 32 - __builtin_clz(op);
 }
 
+int
+bt_le_adv_start(const struct bt_le_adv_param *param,
+                const struct bt_data *ad, size_t ad_len,
+                const struct bt_data *sd, size_t sd_len);
 
 #endif

@@ -323,6 +323,12 @@ k_work_submit(struct k_work *w)
     os_callout_reset(w, 0);
 }
 
+void
+k_work_add_arg(struct k_work *w, void *arg)
+{
+    w->c_ev.ev_arg = arg;
+}
+
 uint32_t
 k_delayed_work_remaining_get (struct k_delayed_work *w)
 {
@@ -395,4 +401,53 @@ bt_pub_key_get(void)
     }
 
     return pub;
+}
+
+static int
+set_ad(const struct bt_data *ad, size_t ad_len, u8_t *buf, u8_t *buf_len)
+{
+    int i;
+
+    for (i = 0; i < ad_len; i++) {
+        buf[*buf_len++] = ad[i].data_len + 1;
+        buf[*buf_len++] = ad[i].type;
+
+        memcpy(&buf[*buf_len], ad[i].data,
+               ad[i].data_len);
+        *buf_len += ad[i].data_len;
+    }
+
+    return 0;
+}
+
+int
+bt_le_adv_start(const struct bt_le_adv_param *param,
+                const struct bt_data *ad, size_t ad_len,
+                const struct bt_data *sd, size_t sd_len)
+{
+#if MYNEWT_VAL(BLE_EXT_ADV)
+    uint8_t buf[MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)];
+#else
+    uint8_t buf[BLE_HS_ADV_MAX_SZ];
+#endif
+    uint8_t buf_len;
+    int err;
+
+    err = set_ad(ad, ad_len, buf, &buf_len);
+    if (err) {
+        return err;
+    }
+
+    err = ble_gap_adv_set_data(buf, buf_len);
+    if (err != 0) {
+        return err;
+    }
+
+    err = ble_gap_adv_start(0x00, NULL, BLE_HS_FOREVER, param, NULL, NULL);
+    if (err) {
+        BT_ERR("Advertising failed: err %d", err);
+        return err;
+    }
+
+    return 0;
 }
