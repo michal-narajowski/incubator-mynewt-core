@@ -198,12 +198,13 @@ ble_hs_hci_cmd_body_le_set_adv_params(const struct hci_adv_params *adv,
         return -1;
     }
 
+    itvl = BLE_HCI_ADV_ITVL_MIN;
     /* Make sure interval is valid for advertising type. */
     if ((adv->adv_type == BLE_HCI_ADV_TYPE_ADV_NONCONN_IND) ||
         (adv->adv_type == BLE_HCI_ADV_TYPE_ADV_SCAN_IND)) {
-        itvl = BLE_HCI_ADV_ITVL_NONCONN_MIN;
-    } else {
-        itvl = BLE_HCI_ADV_ITVL_MIN;
+        if ( 0/* Host is not BT5*/) {
+            itvl = BLE_HCI_ADV_ITVL_NONCONN_MIN;
+        }
     }
 
     /* Do not check if high duty-cycle directed */
