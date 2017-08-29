@@ -320,4 +320,3 @@ syscfg.vals.BLE_MESH_PB_GATT:
 
 syscfg.vals.BLE_MESH_PB_ADV:
     BLE_MESH_PROV: 1
-
