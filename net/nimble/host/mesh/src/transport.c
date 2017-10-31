@@ -1091,6 +1091,10 @@ int bt_mesh_trans_recv(struct os_mbuf *buf, struct bt_mesh_net_rx *rx)
 		err = trans_unseg(buf, rx);
 	}
 
+	if (err) {
+		return err;
+	}
+
 	/* Notify LPN state machine so a Friend Poll will be sent. If the
 	 * message was a Friend Update it's possible that a Poll was already
 	 * queued for sending, however that's fine since then the
