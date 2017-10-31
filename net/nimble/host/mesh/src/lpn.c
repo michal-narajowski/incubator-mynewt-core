@@ -300,6 +300,10 @@ static int send_friend_poll(void)
 		return 0;
 	}
 
+	/* Enable scan before sending,
+	 * to make sure we will catch the response */
+	bt_mesh_scan_enable();
+
 	err = bt_mesh_ctl_send(&tx, TRANS_CTL_OP_FRIEND_POLL, &fsn, 1,
 			       req_sent);
 	if (err == 0) {
@@ -437,6 +441,12 @@ int bt_mesh_lpn_friend_offer(struct bt_mesh_net_rx *rx,
 	lpn->recv_win = msg->recv_win;
 	lpn->queue_size = msg->queue_size;
 
+	/* Set state before sending, to avoid
+	 * state conflict and to make sure we transition
+	 * from ESTABLISHING when req_sent is called
+	 */
+	lpn_set_state(BT_MESH_LPN_ESTABLISHING);
+
 	err = send_friend_poll();
 	if (err) {
 		bt_mesh_friend_cred_clear(cred);
@@ -447,7 +457,6 @@ int bt_mesh_lpn_friend_offer(struct bt_mesh_net_rx *rx,
 	}
 
 	lpn->counter++;
-	lpn_set_state(BT_MESH_LPN_ESTABLISHING);
 
 	return 0;
 }
@@ -654,7 +663,6 @@ static void lpn_timeout(struct os_event *work)
 		clear_friendship(false);
 		break;
 	case BT_MESH_LPN_RECV_DELAY:
-		bt_mesh_scan_enable();
 		lpn_set_state(BT_MESH_LPN_WAIT_UPDATE);
 		k_delayed_work_submit(&lpn->timer,
 				      lpn->recv_win + SCAN_LATENCY);
@@ -827,6 +835,7 @@ int bt_mesh_lpn_friend_update(struct bt_mesh_net_rx *rx,
 
 		/* Set initial poll timeout */
 		lpn->poll_timeout = min(POLL_TIMEOUT(lpn), K_SECONDS(1));
+		lpn->sent_req = 0;
 	}
 
 	friend_response_received(lpn);
