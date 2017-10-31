@@ -628,9 +628,7 @@ static void lpn_timeout(struct os_event *work)
 		k_delayed_work_submit(&lpn->timer, FRIEND_REQ_RETRY_TIMEOUT);
 		break;
 	case BT_MESH_LPN_ESTABLISHING:
-		BT_ERR("Timed out waiting for first Friend Update");
-		clear_friendship(false);
-		break;
+		/* fall through */
 	case BT_MESH_LPN_ESTABLISHED:
 		if (lpn->req_attempts < REQ_ATTEMPTS(lpn)) {
 			u8_t req = lpn->sent_req;
