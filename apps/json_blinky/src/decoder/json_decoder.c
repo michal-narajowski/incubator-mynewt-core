@@ -11,10 +11,15 @@ char *response;
 
 #define MAXCHANNELS 72
 
-static long long int PRN[MAXCHANNELS];
-static long long int elevation[MAXCHANNELS];
-static long long int azimuth[MAXCHANNELS];
-static bool usedflags[MAXCHANNELS];
+struct sat_data_struct {
+    long long int PRN;
+    long long int elevation;
+    long long int azimuth;
+    bool usedflags;
+};
+
+static struct sat_data_struct sat_data[MAXCHANNELS];
+
 struct jbuf tjb;
 
 int visible;
@@ -22,21 +27,21 @@ int visible;
 const struct json_attr_t sat_attrs[] = {
     {	.attribute = "PRN",
     	.type = t_integer,
-    	.addr.integer = PRN
+    	JSON_STRUCT_OBJECT(struct sat_data_struct, PRN)
     },
     {	.attribute = "el",
     	.type = t_integer,
-    	.addr.integer = elevation
+    	JSON_STRUCT_OBJECT(struct sat_data_struct, elevation)
     },
     {
     	.attribute = "az",
     	.type = t_integer,
-    	.addr.integer = azimuth
+    	JSON_STRUCT_OBJECT(struct sat_data_struct, azimuth)
     },
     {
     	.attribute = "used",
     	.type = t_boolean,
-    	.addr.boolean = usedflags
+    	JSON_STRUCT_OBJECT(struct sat_data_struct, usedflags)
     }
 };
 
@@ -49,12 +54,7 @@ const struct json_attr_t json_attrs_sky[] = {
     {
     	.attribute = "satellites",
     	.type = t_array,
-    	.addr.array = {
-            .element_type = t_structobject,
-            .arr.objects.subtype=sat_attrs,
-            .maxlen = MAXCHANNELS,
-            .count = &visible
-        }
+    	JSON_STRUCT_ARRAY(sat_data, sat_attrs, &visible),
     }
 };
 
@@ -72,7 +72,8 @@ int fetch_map(const char *map){
 
     for (i = 0; i < visible; i++){
         console_printf("PRN = %lld, elevation = %lld, azimuth = %lld used = %d\n",
-                       PRN[i], elevation[i], azimuth[i], usedflags[i]);
+                       sat_data[i].PRN, sat_data[i].elevation,
+                       sat_data[i].azimuth, sat_data[i].usedflags);
     }
     printf("Complete\n");
     return 1;
