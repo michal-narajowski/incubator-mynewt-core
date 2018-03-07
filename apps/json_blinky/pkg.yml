@@ -17,7 +17,7 @@
 # under the License.
 #
 
-pkg.name: apps/blinky
+pkg.name: apps/json_blinky
 pkg.type: app
 pkg.description: Basic example application which blinks an LED.
 pkg.author: "Apache Mynewt <dev@mynewt.apache.org>"

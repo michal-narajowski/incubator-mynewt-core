@@ -11,9 +11,9 @@ char *response;
 
 #define MAXCHANNELS 72
 
-long long int PRN[MAXCHANNELS];
-long long int elevation[MAXCHANNELS];
-long long int azimuth[MAXCHANNELS];
+static long long int PRN[MAXCHANNELS];
+static long long int elevation[MAXCHANNELS];
+static long long int azimuth[MAXCHANNELS];
 static bool usedflags[MAXCHANNELS];
 struct jbuf tjb;
 
@@ -24,12 +24,12 @@ const struct json_attr_t sat_attrs[] = {
     	.type = t_integer,
     	.addr.integer = PRN
     },
-    {	.attribute = "el",     
+    {	.attribute = "el",
     	.type = t_integer,
     	.addr.integer = elevation
     },
     {
-    	.attribute = "az",     
+    	.attribute = "az",
     	.type = t_integer,
     	.addr.integer = azimuth
     },
@@ -41,13 +41,13 @@ const struct json_attr_t sat_attrs[] = {
 };
 
 const struct json_attr_t json_attrs_sky[] = {
-    {	
+    {
     	.attribute = "class",
         .type = t_check,
         .dflt.check = "SKY"
     },
     {
-    	.attribute = "satellites",     
+    	.attribute = "satellites",
     	.type = t_array,
     	.addr.array = {
             .element_type = t_structobject,
@@ -57,19 +57,23 @@ const struct json_attr_t json_attrs_sky[] = {
         }
     }
 };
-    
-int fetch_map(const char *map){
-	
-	buf_init(&tjb,(char *) map);
-	console_printf("Buffer Initiated\n");
-	
-    json_read_object(&tjb.json_buf, json_attrs_sky);
-	
-	console_printf("JSON Read %d!\n", visible);    
 
-//     for (i = 0; i < visible; i++){
-        console_printf("PRN = %lld, elevation = %lld, azimuth = %lld\n", PRN[0], elevation[0], azimuth[0]);
-//     }
+int fetch_map(const char *map){
+    int i;
+    int rc;
+
+    buf_init(&tjb,(char *) map);
+    console_printf("Buffer Initiated\n");
+
+    rc = json_read_object(&tjb.json_buf, json_attrs_sky);
+
+    console_printf("JSON Read rc=%d\n", rc);
+    console_printf("JSON visible %d\n", visible);
+
+    for (i = 0; i < visible; i++){
+        console_printf("PRN = %lld, elevation = %lld, azimuth = %lld used = %d\n",
+                       PRN[i], elevation[i], azimuth[i], usedflags[i]);
+    }
     printf("Complete\n");
     return 1;
 }
