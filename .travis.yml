@@ -132,7 +132,7 @@ before_install:
   - if [ "${TEST}" != "RAT" ]; then go version; fi
 
 install:
-  - git clone https://github.com/runtimeco/mynewt-travis-ci $HOME/ci
+  - git clone -b gcc-toolchain-update https://github.com/michal-narajowski/mynewt-travis-ci $HOME/ci
   - chmod +x $HOME/ci/*.sh
   - |
     if [ "${TEST}" == "RAT" ]; then
